@@ -24,6 +24,7 @@ public class TransactionResponse {
     private LocalDate effectiveDate;
     private TransactionType type;
     private RecurrenceType recurrence;
+    private LocalDate endDate;
     private CategoryResponse category;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -119,7 +119,13 @@ public class BalanceService {
         List<LocalDate> occurrences = new ArrayList<>();
         LocalDate currentDate = transaction.getEffectiveDate();
 
-        while (!currentDate.isAfter(endDate)) {
+        // Limita ao endDate da transação se definido
+        LocalDate effectiveEndDate = endDate;
+        if (transaction.getEndDate() != null && transaction.getEndDate().isBefore(endDate)) {
+            effectiveEndDate = transaction.getEndDate();
+        }
+
+        while (!currentDate.isAfter(effectiveEndDate)) {
             if (!currentDate.isBefore(startDate)) {
                 occurrences.add(currentDate);
             }
@@ -129,7 +135,7 @@ public class BalanceService {
                 case WEEKLY -> currentDate.plusWeeks(1);
                 case MONTHLY -> currentDate.plusMonths(1);
                 case YEARLY -> currentDate.plusYears(1);
-                default -> endDate.plusDays(1); // Sai do loop para NONE
+                default -> effectiveEndDate.plusDays(1); // Sai do loop para NONE
             };
         }
 

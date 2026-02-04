@@ -20,11 +20,15 @@ public interface TransactionMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "lastGeneratedDate", ignore = true)
+    @Mapping(target = "parentRecurringId", ignore = true)
     Transaction toEntity(TransactionRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "lastGeneratedDate", ignore = true)
+    @Mapping(target = "parentRecurringId", ignore = true)
     void updateEntity(TransactionRequest request, @MappingTarget Transaction transaction);
 }

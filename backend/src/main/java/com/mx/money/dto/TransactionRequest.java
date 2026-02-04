@@ -35,4 +35,9 @@ public class TransactionRequest {
     private RecurrenceType recurrence;
 
     private Long categoryId;
+
+    /**
+     * Data final para recorrências (opcional, null = infinita)
+     */
+    private LocalDate endDate;
 }

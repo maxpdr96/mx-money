@@ -22,6 +22,7 @@ export interface Transaction {
     effectiveDate: string;
     type: TransactionType;
     recurrence: RecurrenceType;
+    endDate: string | null;
     category: Category | null;
     createdAt: string;
     updatedAt: string;
@@ -34,6 +35,7 @@ export interface TransactionRequest {
     type: TransactionType;
     recurrence?: RecurrenceType;
     categoryId?: number;
+    endDate?: string | null;
 }
 
 export interface BalanceResponse {

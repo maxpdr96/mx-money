@@ -2,6 +2,7 @@ package com.mx.money.controller;
 
 import com.mx.money.dto.TransactionRequest;
 import com.mx.money.dto.TransactionResponse;
+import com.mx.money.service.RecurringTransactionService;
 import com.mx.money.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -19,6 +21,7 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final RecurringTransactionService recurringTransactionService;
 
     @GetMapping
     public ResponseEntity<List<TransactionResponse>> findAll(
@@ -53,5 +56,16 @@ public class TransactionController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         transactionService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Gera transações pendentes de recorrências manualmente
+     */
+    @PostMapping("/generate-recurring")
+    public ResponseEntity<Map<String, Object>> generateRecurring() {
+        int count = recurringTransactionService.generateRecurringTransactions();
+        return ResponseEntity.ok(Map.of(
+                "generated", count,
+                "message", count > 0 ? count + " transações geradas" : "Nenhuma transação pendente"));
     }
 }

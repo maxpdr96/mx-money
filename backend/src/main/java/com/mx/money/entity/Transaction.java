@@ -53,6 +53,27 @@ public class Transaction {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    /**
+     * Para transações recorrentes: última data em que ocorrências foram geradas
+     */
+    @Column(name = "last_generated_date")
+    private LocalDate lastGeneratedDate;
+
+    /**
+     * Data final para transações recorrentes (após esta data, não gera mais
+     * ocorrências).
+     * Se null, a recorrência é infinita.
+     */
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    /**
+     * ID da transação recorrente que originou esta transação (se gerada
+     * automaticamente)
+     */
+    @Column(name = "parent_recurring_id")
+    private Long parentRecurringId;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

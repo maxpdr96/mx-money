@@ -20,6 +20,7 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
     );
     const [recurrence, setRecurrence] = useState<RecurrenceType>(transaction?.recurrence || 'NONE');
     const [categoryId, setCategoryId] = useState<number | undefined>(transaction?.category?.id);
+    const [endDate, setEndDate] = useState<string>(transaction?.endDate || '');
 
     const { data: categories } = useCategories();
     const createMutation = useCreateTransaction();
@@ -34,6 +35,7 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
             setEffectiveDate(transaction.effectiveDate);
             setRecurrence(transaction.recurrence);
             setCategoryId(transaction.category?.id);
+            setEndDate(transaction.endDate || '');
         }
     }, [transaction]);
 
@@ -47,6 +49,7 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
             type,
             recurrence,
             categoryId,
+            endDate: endDate || null,
         };
 
         try {
@@ -188,6 +191,26 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
                             </select>
                         </div>
                     </div>
+
+                    {/* Data Final (apenas para recorrências) */}
+                    {recurrence !== 'NONE' && (
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="endDate">
+                                Data Final (opcional)
+                            </label>
+                            <input
+                                id="endDate"
+                                type="date"
+                                className="form-input"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                min={effectiveDate}
+                            />
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                                Deixe vazio para repetir indefinidamente
+                            </span>
+                        </div>
+                    )}
 
                     <div className="modal-footer">
                         <button type="button" className="btn btn-ghost" onClick={onClose}>
