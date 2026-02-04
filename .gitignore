@@ -4,6 +4,8 @@
 *.iml
 .DS_Store
 
+.agent/
+
 # Java / Maven (Backend)
 target/
 backend/target/
