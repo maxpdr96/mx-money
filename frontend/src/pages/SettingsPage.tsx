@@ -9,7 +9,8 @@ import {
     RefreshCw,
     HardDrive,
     Clock,
-    Shield
+    Shield,
+    Folder
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -31,6 +32,8 @@ export function SettingsPage() {
     const [settings, setSettings] = useState<BackupSettings | null>(null);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [newDirectory, setNewDirectory] = useState('');
+    const [editingDirectory, setEditingDirectory] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const loadData = async () => {
@@ -42,6 +45,7 @@ export function SettingsPage() {
             ]);
             setBackups(backupList);
             setSettings(backupSettings);
+            setNewDirectory(backupSettings.backupDirectory);
         } catch {
             showMessage('error', 'Erro ao carregar dados');
         }
@@ -120,6 +124,22 @@ export function SettingsPage() {
             showMessage('success', `Backup automático ${updated.autoBackupEnabled ? 'ativado' : 'desativado'}`);
         } catch {
             showMessage('error', 'Erro ao alterar configuração');
+        }
+    };
+
+    const handleSaveDirectory = async () => {
+        if (!newDirectory.trim()) {
+            showMessage('error', 'Digite um caminho válido');
+            return;
+        }
+        try {
+            const updated = await backupApi.setDirectory(newDirectory.trim());
+            setSettings(updated);
+            setEditingDirectory(false);
+            showMessage('success', 'Diretório de backup alterado');
+            loadData();
+        } catch {
+            showMessage('error', 'Erro ao alterar diretório');
         }
     };
 
@@ -217,6 +237,65 @@ export function SettingsPage() {
                         </>
                     )}
                 </div>
+            </div>
+
+            {/* Backup Directory */}
+            <div className="card" style={{ marginTop: '1.5rem' }}>
+                <div className="card-header">
+                    <h3 className="card-title">
+                        <Folder size={18} style={{ marginRight: '8px' }} />
+                        Diretório de Backups
+                    </h3>
+                </div>
+
+                {loading ? (
+                    <div className="loading"><div className="spinner"></div></div>
+                ) : settings && (
+                    <div>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                            Escolha onde os backups serão salvos. Use um caminho absoluto.
+                        </p>
+
+                        {editingDirectory ? (
+                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={newDirectory}
+                                    onChange={(e) => setNewDirectory(e.target.value)}
+                                    placeholder="/caminho/para/backups"
+                                    style={{ flex: 1 }}
+                                />
+                                <button className="btn btn-primary" onClick={handleSaveDirectory}>
+                                    <Save size={16} />
+                                    Salvar
+                                </button>
+                                <button className="btn btn-ghost" onClick={() => {
+                                    setEditingDirectory(false);
+                                    setNewDirectory(settings.backupDirectory);
+                                }}>
+                                    Cancelar
+                                </button>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                <code style={{
+                                    flex: 1,
+                                    padding: '12px',
+                                    background: 'var(--surface-secondary)',
+                                    borderRadius: '8px',
+                                    fontSize: '0.875rem',
+                                    wordBreak: 'break-all'
+                                }}>
+                                    {settings.backupDirectory}
+                                </code>
+                                <button className="btn btn-ghost" onClick={() => setEditingDirectory(true)}>
+                                    Alterar
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Backups List */}

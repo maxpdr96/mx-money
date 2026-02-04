@@ -113,4 +113,18 @@ public class BackupController {
         backupService.setAutoBackupEnabled(enabled);
         return ResponseEntity.ok(backupService.getSettings());
     }
+
+    /**
+     * Update backup directory
+     */
+    @PutMapping("/settings/directory")
+    public ResponseEntity<Map<String, Object>> setBackupDirectory(@RequestBody Map<String, String> body)
+            throws IOException {
+        String directory = body.get("directory");
+        if (directory == null || directory.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Directory is required"));
+        }
+        backupService.setBackupDirectory(directory);
+        return ResponseEntity.ok(backupService.getSettings());
+    }
 }

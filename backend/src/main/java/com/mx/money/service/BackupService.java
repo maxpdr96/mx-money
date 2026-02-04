@@ -22,19 +22,63 @@ public class BackupService {
     private static final Logger log = LoggerFactory.getLogger(BackupService.class);
     private static final DateTimeFormatter BACKUP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     private static final int MAX_BACKUPS = 5;
+    private static final Path SETTINGS_FILE = Paths.get("./data/backup-settings.properties");
+    private static final Path DEFAULT_BACKUP_DIR = Paths.get("./data/backups");
 
     @Value("${spring.datasource.url}")
     private String datasourceUrl;
 
-    private final Path backupDir;
+    private Path backupDir;
     private boolean autoBackupEnabled = true;
 
     public BackupService() {
-        this.backupDir = Paths.get("./data/backups");
+        loadSettings();
         try {
             Files.createDirectories(backupDir);
         } catch (IOException e) {
             log.error("Failed to create backup directory", e);
+        }
+    }
+
+    /**
+     * Loads settings from file or uses defaults
+     */
+    private void loadSettings() {
+        this.backupDir = DEFAULT_BACKUP_DIR;
+        this.autoBackupEnabled = true;
+
+        if (Files.exists(SETTINGS_FILE)) {
+            try {
+                Properties props = new Properties();
+                props.load(Files.newInputStream(SETTINGS_FILE));
+
+                String dir = props.getProperty("backupDirectory");
+                if (dir != null && !dir.isBlank()) {
+                    this.backupDir = Paths.get(dir);
+                }
+
+                String auto = props.getProperty("autoBackupEnabled");
+                if (auto != null) {
+                    this.autoBackupEnabled = Boolean.parseBoolean(auto);
+                }
+            } catch (IOException e) {
+                log.warn("Failed to load backup settings, using defaults", e);
+            }
+        }
+    }
+
+    /**
+     * Saves settings to file
+     */
+    private void saveSettings() {
+        try {
+            Files.createDirectories(SETTINGS_FILE.getParent());
+            Properties props = new Properties();
+            props.setProperty("backupDirectory", backupDir.toAbsolutePath().toString());
+            props.setProperty("autoBackupEnabled", String.valueOf(autoBackupEnabled));
+            props.store(Files.newOutputStream(SETTINGS_FILE), "MX-Money Backup Settings");
+        } catch (IOException e) {
+            log.error("Failed to save backup settings", e);
         }
     }
 
@@ -55,6 +99,9 @@ public class BackupService {
         if (!Files.exists(dbPath)) {
             throw new IOException("Database file not found: " + dbPath);
         }
+
+        // Ensure backup directory exists
+        Files.createDirectories(backupDir);
 
         String backupName = "backup_" + LocalDateTime.now().format(BACKUP_DATE_FORMAT) + ".db";
         Path backupPath = backupDir.resolve(backupName);
@@ -175,7 +222,19 @@ public class BackupService {
      */
     public void setAutoBackupEnabled(boolean enabled) {
         this.autoBackupEnabled = enabled;
+        saveSettings();
         log.info("Auto backup enabled: {}", enabled);
+    }
+
+    /**
+     * Updates backup directory
+     */
+    public void setBackupDirectory(String directory) throws IOException {
+        Path newDir = Paths.get(directory);
+        Files.createDirectories(newDir);
+        this.backupDir = newDir;
+        saveSettings();
+        log.info("Backup directory changed to: {}", directory);
     }
 
     public boolean isAutoBackupEnabled() {

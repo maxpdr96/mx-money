@@ -4,6 +4,7 @@ import { Dashboard } from './pages/Dashboard';
 import { ProjectionPage } from './pages/ProjectionPage';
 import { RecurringPage } from './pages/RecurringPage';
 import { TransactionsPage } from './pages/TransactionsPage';
+import { SearchPage } from './pages/SearchPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { Wallet, Sun, Moon } from 'lucide-react';
 import './index.css';
@@ -18,7 +19,7 @@ const queryClient = new QueryClient({
   },
 });
 
-type Page = 'dashboard' | 'transactions' | 'projection' | 'recurring' | 'settings';
+type Page = 'dashboard' | 'transactions' | 'search' | 'projection' | 'recurring' | 'settings';
 
 function ThemeToggle() {
   const [isDark, setIsDark] = useState(() => {
@@ -73,6 +74,13 @@ function App() {
               </a>
               <a
                 href="#"
+                className={`nav-link ${currentPage === 'search' ? 'active' : ''}`}
+                onClick={(e) => { e.preventDefault(); setCurrentPage('search'); }}
+              >
+                Buscar
+              </a>
+              <a
+                href="#"
                 className={`nav-link ${currentPage === 'projection' ? 'active' : ''}`}
                 onClick={(e) => { e.preventDefault(); setCurrentPage('projection'); }}
               >
@@ -100,6 +108,7 @@ function App() {
         <main className="main-content">
           {currentPage === 'dashboard' && <Dashboard />}
           {currentPage === 'transactions' && <TransactionsPage />}
+          {currentPage === 'search' && <SearchPage />}
           {currentPage === 'projection' && <ProjectionPage />}
           {currentPage === 'recurring' && <RecurringPage />}
           {currentPage === 'settings' && <SettingsPage />}
@@ -110,4 +119,5 @@ function App() {
 }
 
 export default App;
+
 

@@ -149,6 +149,11 @@ export const backupApi = {
         const { data } = await api.put<BackupSettings>('/backup/settings/auto-backup', { enabled });
         return data;
     },
+
+    setDirectory: async (directory: string): Promise<BackupSettings> => {
+        const { data } = await api.put<BackupSettings>('/backup/settings/directory', { directory });
+        return data;
+    },
 };
 
 export default api;
