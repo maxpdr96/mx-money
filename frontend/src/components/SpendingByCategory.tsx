@@ -15,8 +15,18 @@ const COLORS = [
     '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
 ];
 
-export function SpendingByCategory() {
-    const { data: transactions, isLoading } = useTransactions();
+import type { Transaction } from '../types';
+
+interface SpendingByCategoryProps {
+    transactions?: Transaction[];
+    isLoading?: boolean;
+}
+
+export function SpendingByCategory({ transactions: propsTransactions, isLoading: propsLoading }: SpendingByCategoryProps = {}) {
+    const { data: hookTransactions, isLoading: hookLoading } = useTransactions();
+
+    const transactions = propsTransactions || hookTransactions;
+    const isLoading = propsLoading !== undefined ? propsLoading : hookLoading;
 
     if (isLoading) {
         return (

@@ -15,6 +15,7 @@ import {
     TrendingDown
 } from 'lucide-react';
 import type { Transaction } from '../types';
+import { SpendingByCategory } from '../components/SpendingByCategory';
 
 interface TransactionItemProps {
     transaction: Transaction;
@@ -96,7 +97,7 @@ function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps
 export function TransactionsPage() {
     const currentDate = new Date();
     const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
-    const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
+    const [selectedMonth, setSelectedMonth] = useState<number | null>(currentDate.getMonth());
     const [showForm, setShowForm] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
@@ -123,6 +124,17 @@ export function TransactionsPage() {
     // Filtra transações pelo mês/ano selecionado
     const filteredTransactions = useMemo(() => {
         if (!allTransactions) return [];
+
+        if (selectedMonth === null) {
+            // Filtro por ano inteiro
+            const startDate = new Date(selectedYear, 0, 1);
+            const endDate = new Date(selectedYear, 11, 31, 23, 59, 59);
+
+            return allTransactions.filter((t) => {
+                const txDate = parseISO(t.effectiveDate);
+                return txDate >= startDate && txDate <= endDate;
+            }).sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate));
+        }
 
         const startDate = startOfMonth(new Date(selectedYear, selectedMonth));
         const endDate = endOfMonth(new Date(selectedYear, selectedMonth));
@@ -184,7 +196,14 @@ export function TransactionsPage() {
             </div>
 
             {/* Meses */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                <button
+                    className={`btn ${selectedMonth === null ? 'btn-primary' : 'btn-ghost'}`}
+                    onClick={() => setSelectedMonth(null)}
+                    style={{ padding: '0.5rem 0.75rem', fontSize: '0.875rem', textTransform: 'capitalize' }}
+                >
+                    {language === 'pt-BR' ? 'Ano' : 'Year'}
+                </button>
                 {monthNames.map((month, index) => (
                     <button
                         key={month}
@@ -195,6 +214,11 @@ export function TransactionsPage() {
                         {month.slice(0, 3)}
                     </button>
                 ))}
+            </div>
+
+            {/* Gráfico de Gastos (mostra se houver dados) */}
+            <div style={{ marginBottom: '1.5rem' }}>
+                <SpendingByCategory transactions={filteredTransactions} isLoading={isLoading} />
             </div>
 
             {/* Cards de resumo */}
@@ -239,7 +263,7 @@ export function TransactionsPage() {
             <div className="card">
                 <div className="card-header">
                     <h3 className="card-title" style={{ textTransform: 'capitalize' }}>
-                        {monthNames[selectedMonth]} {selectedYear} ({filteredTransactions.length} {language === 'pt-BR' ? 'transações' : 'transactions'})
+                        {selectedMonth !== null ? monthNames[selectedMonth] : (language === 'pt-BR' ? 'Ano' : 'Year')} {selectedYear} ({filteredTransactions.length} {language === 'pt-BR' ? 'transações' : 'transactions'})
                     </h3>
                 </div>
 
