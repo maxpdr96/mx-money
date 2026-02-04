@@ -94,6 +94,18 @@ export interface Translations {
         createFirst: string;
     };
 
+    // Reports
+    reports: {
+        title: string;
+        description: string;
+        generate: string;
+        generating: string;
+        lastGenerated: string;
+        noAnalysis: string;
+        instructions: string;
+        errorOllama: string;
+    };
+
     // Settings
     settings: {
         title: string;
@@ -245,6 +257,16 @@ export const translations: Record<Language, Translations> = {
             noRecurring: 'Nenhuma transação recorrente',
             createFirst: 'Crie uma transação com recorrência para visualizar aqui',
         },
+        reports: {
+            title: 'Relatórios IA',
+            description: 'Análise inteligente das suas finanças usando IA',
+            generate: 'Gerar Análise',
+            generating: 'Gerando análise...',
+            lastGenerated: 'Gerado em',
+            noAnalysis: 'Nenhuma análise gerada ainda',
+            instructions: 'Clique no botão acima para gerar uma análise detalhada das suas finanças',
+            errorOllama: 'Erro ao conectar com Ollama. Verifique se está rodando.',
+        },
         settings: {
             title: 'Configurações',
             language: {
@@ -388,6 +410,16 @@ export const translations: Record<Language, Translations> = {
             title: 'Recurring Transactions',
             noRecurring: 'No recurring transactions',
             createFirst: 'Create a transaction with recurrence to view here',
+        },
+        reports: {
+            title: 'AI Reports',
+            description: 'Intelligent analysis of your finances using AI',
+            generate: 'Generate Analysis',
+            generating: 'Generating analysis...',
+            lastGenerated: 'Generated at',
+            noAnalysis: 'No analysis generated yet',
+            instructions: 'Click the button above to generate a detailed analysis of your finances',
+            errorOllama: 'Error connecting to Ollama. Check if it is running.',
         },
         settings: {
             title: 'Settings',

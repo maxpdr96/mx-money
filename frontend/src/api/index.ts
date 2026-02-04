@@ -156,4 +156,21 @@ export const backupApi = {
     },
 };
 
+// Reports - AI Analysis
+export interface ReportAnalysisResponse {
+    analysis: string;
+    generatedAt: string;
+    success: boolean;
+    errorMessage?: string;
+}
+
+export const reportsApi = {
+    generateAnalysis: async (language: string = 'pt-BR'): Promise<ReportAnalysisResponse> => {
+        const { data } = await api.get<ReportAnalysisResponse>('/reports/analysis', {
+            params: { language },
+        });
+        return data;
+    },
+};
+
 export default api;
