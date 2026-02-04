@@ -42,7 +42,7 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
 
         const request: TransactionRequest = {
             description,
-            amount: parseFloat(amount),
+            amount: parseFloat(amount.replace(',', '.')),
             effectiveDate,
             type,
             recurrence,
@@ -117,13 +117,18 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
                             </label>
                             <input
                                 id="amount"
-                                type="number"
+                                type="text"
+                                inputMode="decimal"
                                 className="form-input"
                                 placeholder="0,00"
-                                step="0.01"
-                                min="0.01"
                                 value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    // Permite apenas números, vírgula e ponto
+                                    if (/^[\d,.]*$/.test(value)) {
+                                        setAmount(value);
+                                    }
+                                }}
                                 required
                             />
                         </div>
