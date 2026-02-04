@@ -6,6 +6,7 @@ import { RecurringPage } from './pages/RecurringPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { SearchPage } from './pages/SearchPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { LanguageProvider, useLanguage } from './i18n';
 import { Wallet, Sun, Moon } from 'lucide-react';
 import './index.css';
 
@@ -36,88 +37,98 @@ function ThemeToggle() {
     <button
       className="theme-toggle"
       onClick={() => setIsDark(!isDark)}
-      title={isDark ? 'Modo claro' : 'Modo escuro'}
+      title={isDark ? 'Light mode' : 'Dark mode'}
     >
       {isDark ? <Sun size={18} /> : <Moon size={18} />}
     </button>
   );
 }
 
-function App() {
+function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
+  const { t } = useLanguage();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="app">
-        <header className="header">
-          <div className="header-content">
-            <a href="#" className="logo" onClick={() => setCurrentPage('dashboard')}>
-              <div className="logo-icon">
-                <Wallet size={20} color="white" />
-              </div>
-              MX Money
+    <div className="app">
+      <header className="header">
+        <div className="header-content">
+          <a href="#" className="logo" onClick={() => setCurrentPage('dashboard')}>
+            <div className="logo-icon">
+              <Wallet size={20} color="white" />
+            </div>
+            MX Money
+          </a>
+          <nav className="nav">
+            <a
+              href="#"
+              className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setCurrentPage('dashboard'); }}
+            >
+              {t.nav.dashboard}
             </a>
-            <nav className="nav">
-              <a
-                href="#"
-                className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
-                onClick={(e) => { e.preventDefault(); setCurrentPage('dashboard'); }}
-              >
-                Dashboard
-              </a>
-              <a
-                href="#"
-                className={`nav-link ${currentPage === 'transactions' ? 'active' : ''}`}
-                onClick={(e) => { e.preventDefault(); setCurrentPage('transactions'); }}
-              >
-                Transações
-              </a>
-              <a
-                href="#"
-                className={`nav-link ${currentPage === 'search' ? 'active' : ''}`}
-                onClick={(e) => { e.preventDefault(); setCurrentPage('search'); }}
-              >
-                Buscar
-              </a>
-              <a
-                href="#"
-                className={`nav-link ${currentPage === 'projection' ? 'active' : ''}`}
-                onClick={(e) => { e.preventDefault(); setCurrentPage('projection'); }}
-              >
-                Projeção
-              </a>
-              <a
-                href="#"
-                className={`nav-link ${currentPage === 'recurring' ? 'active' : ''}`}
-                onClick={(e) => { e.preventDefault(); setCurrentPage('recurring'); }}
-              >
-                Recorrentes
-              </a>
-              <a
-                href="#"
-                className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
-                onClick={(e) => { e.preventDefault(); setCurrentPage('settings'); }}
-              >
-                Configurações
-              </a>
-              <ThemeToggle />
-            </nav>
-          </div>
-        </header>
+            <a
+              href="#"
+              className={`nav-link ${currentPage === 'transactions' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setCurrentPage('transactions'); }}
+            >
+              {t.nav.transactions}
+            </a>
+            <a
+              href="#"
+              className={`nav-link ${currentPage === 'search' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setCurrentPage('search'); }}
+            >
+              {t.nav.search}
+            </a>
+            <a
+              href="#"
+              className={`nav-link ${currentPage === 'projection' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setCurrentPage('projection'); }}
+            >
+              {t.nav.projection}
+            </a>
+            <a
+              href="#"
+              className={`nav-link ${currentPage === 'recurring' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setCurrentPage('recurring'); }}
+            >
+              {t.nav.recurring}
+            </a>
+            <a
+              href="#"
+              className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setCurrentPage('settings'); }}
+            >
+              {t.nav.settings}
+            </a>
+            <ThemeToggle />
+          </nav>
+        </div>
+      </header>
 
-        <main className="main-content">
-          {currentPage === 'dashboard' && <Dashboard />}
-          {currentPage === 'transactions' && <TransactionsPage />}
-          {currentPage === 'search' && <SearchPage />}
-          {currentPage === 'projection' && <ProjectionPage />}
-          {currentPage === 'recurring' && <RecurringPage />}
-          {currentPage === 'settings' && <SettingsPage />}
-        </main>
-      </div>
+      <main className="main-content">
+        {currentPage === 'dashboard' && <Dashboard />}
+        {currentPage === 'transactions' && <TransactionsPage />}
+        {currentPage === 'search' && <SearchPage />}
+        {currentPage === 'projection' && <ProjectionPage />}
+        {currentPage === 'recurring' && <RecurringPage />}
+        {currentPage === 'settings' && <SettingsPage />}
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
 
 export default App;
+
 
 

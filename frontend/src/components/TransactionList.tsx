@@ -2,29 +2,10 @@ import { useState } from 'react';
 import { useTransactions, useDeleteTransaction } from '../hooks/useApi';
 import { TransactionForm } from './TransactionForm';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR, enUS } from 'date-fns/locale';
 import { ArrowUpCircle, ArrowDownCircle, Trash2, Pencil } from 'lucide-react';
+import { useLanguage } from '../i18n';
 import type { Transaction } from '../types';
-
-function formatCurrency(value: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-    }).format(value);
-}
-
-function formatDate(dateStr: string): string {
-    const date = new Date(dateStr + 'T00:00:00');
-    return format(date, "dd 'de' MMM", { locale: ptBR });
-}
-
-const RECURRENCE_LABELS: Record<string, string> = {
-    NONE: '',
-    DAILY: 'Diária',
-    WEEKLY: 'Semanal',
-    MONTHLY: 'Mensal',
-    YEARLY: 'Anual',
-};
 
 interface TransactionItemProps {
     transaction: Transaction;
@@ -34,6 +15,31 @@ interface TransactionItemProps {
 
 function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps) {
     const isIncome = transaction.type === 'INCOME';
+    const { t, language } = useLanguage();
+
+    const formatCurrency = (value: number): string => {
+        return new Intl.NumberFormat(language, {
+            style: 'currency',
+            currency: language === 'pt-BR' ? 'BRL' : 'USD',
+        }).format(value);
+    };
+
+    const formatDate = (dateStr: string): string => {
+        const date = new Date(dateStr + 'T00:00:00');
+        const locale = language === 'pt-BR' ? ptBR : enUS;
+        const pattern = language === 'pt-BR' ? "dd 'de' MMM" : "MMM dd";
+        return format(date, pattern, { locale });
+    };
+
+    const getRecurrenceLabel = (recurrence: string) => {
+        switch (recurrence) {
+            case 'DAILY': return t.transactions.form.daily;
+            case 'WEEKLY': return t.transactions.form.weekly;
+            case 'MONTHLY': return t.transactions.form.monthly;
+            case 'YEARLY': return t.transactions.form.yearly;
+            default: return '';
+        }
+    };
 
     return (
         <div className="transaction-item">
@@ -56,7 +62,7 @@ function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps
                     {transaction.recurrence !== 'NONE' && (
                         <>
                             <span>•</span>
-                            <span>{RECURRENCE_LABELS[transaction.recurrence]}</span>
+                            <span>{getRecurrenceLabel(transaction.recurrence)}</span>
                         </>
                     )}
                 </div>
@@ -70,14 +76,14 @@ function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps
                 <button
                     className="btn btn-icon btn-ghost"
                     onClick={() => onEdit(transaction)}
-                    title="Editar"
+                    title={t.common.edit}
                 >
                     <Pencil size={16} />
                 </button>
                 <button
                     className="btn btn-icon btn-ghost"
                     onClick={() => onDelete(transaction.id)}
-                    title="Excluir"
+                    title={t.common.delete}
                 >
                     <Trash2 size={16} />
                 </button>
@@ -90,9 +96,10 @@ export function TransactionList() {
     const { data: transactions, isLoading, error } = useTransactions();
     const deleteMutation = useDeleteTransaction();
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+    const { t } = useLanguage();
 
     const handleDelete = async (id: number) => {
-        if (confirm('Tem certeza que deseja excluir esta transação?')) {
+        if (confirm(t.transactions.confirmDelete)) {
             await deleteMutation.mutateAsync(id);
         }
     };
@@ -105,7 +112,7 @@ export function TransactionList() {
         return (
             <div className="card">
                 <div className="card-header">
-                    <h3 className="card-title">Últimas Transações</h3>
+                    <h3 className="card-title">{t.dashboard.latestTransactions}</h3>
                 </div>
                 <div className="loading">
                     <div className="spinner"></div>
@@ -118,9 +125,9 @@ export function TransactionList() {
         return (
             <div className="card">
                 <div className="card-header">
-                    <h3 className="card-title">Últimas Transações</h3>
+                    <h3 className="card-title">{t.dashboard.latestTransactions}</h3>
                 </div>
-                <p className="empty-state">Erro ao carregar transações</p>
+                <p className="empty-state">{t.messages.errorLoading}</p>
             </div>
         );
     }
@@ -129,16 +136,13 @@ export function TransactionList() {
         <>
             <div className="card">
                 <div className="card-header">
-                    <h3 className="card-title">Últimas Transações</h3>
+                    <h3 className="card-title">{t.dashboard.latestTransactions}</h3>
                 </div>
 
                 {!transactions || transactions.length === 0 ? (
                     <div className="empty-state">
                         <div className="empty-state-icon">📝</div>
-                        <p>Nenhuma transação registrada</p>
-                        <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                            Clique no botão "Nova Transação" para começar
-                        </p>
+                        <p>{t.transactions.noResults}</p>
                     </div>
                 ) : (
                     <div className="transaction-list">
@@ -164,3 +168,4 @@ export function TransactionList() {
         </>
     );
 }
+

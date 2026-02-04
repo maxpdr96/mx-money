@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { useTransactions, useDeleteTransaction } from '../hooks/useApi';
 import { TransactionForm } from '../components/TransactionForm';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR, enUS } from 'date-fns/locale';
+import { useLanguage } from '../i18n';
 import {
     Search,
     ArrowUpCircle,
@@ -14,26 +15,6 @@ import {
     X
 } from 'lucide-react';
 import type { Transaction } from '../types';
-
-function formatCurrency(value: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-    }).format(value);
-}
-
-function formatDate(dateStr: string): string {
-    const date = new Date(dateStr + 'T00:00:00');
-    return format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-}
-
-const RECURRENCE_LABELS: Record<string, string> = {
-    NONE: '',
-    DAILY: 'Diária',
-    WEEKLY: 'Semanal',
-    MONTHLY: 'Mensal',
-    YEARLY: 'Anual',
-};
 
 // Normaliza texto para busca (remove acentos e converte para minúsculas)
 function normalizeText(text: string): string {
@@ -76,6 +57,31 @@ function highlightMatch(text: string, searchTerm: string): JSX.Element {
 
 function TransactionItem({ transaction, onEdit, onDelete, searchTerm }: TransactionItemProps) {
     const isIncome = transaction.type === 'INCOME';
+    const { t, language } = useLanguage();
+
+    const formatCurrency = (value: number): string => {
+        return new Intl.NumberFormat(language, {
+            style: 'currency',
+            currency: language === 'pt-BR' ? 'BRL' : 'USD',
+        }).format(value);
+    };
+
+    const formatDate = (dateStr: string): string => {
+        const date = new Date(dateStr + 'T00:00:00');
+        const locale = language === 'pt-BR' ? ptBR : enUS;
+        const pattern = language === 'pt-BR' ? "dd 'de' MMMM 'de' yyyy" : "MMMM dd, yyyy";
+        return format(date, pattern, { locale });
+    };
+
+    const getRecurrenceLabel = (recurrence: string) => {
+        switch (recurrence) {
+            case 'DAILY': return t.transactions.form.daily;
+            case 'WEEKLY': return t.transactions.form.weekly;
+            case 'MONTHLY': return t.transactions.form.monthly;
+            case 'YEARLY': return t.transactions.form.yearly;
+            default: return '';
+        }
+    };
 
     return (
         <div className="transaction-item">
@@ -100,7 +106,7 @@ function TransactionItem({ transaction, onEdit, onDelete, searchTerm }: Transact
                     {transaction.recurrence !== 'NONE' && (
                         <>
                             <span>•</span>
-                            <span>{RECURRENCE_LABELS[transaction.recurrence]}</span>
+                            <span>{getRecurrenceLabel(transaction.recurrence)}</span>
                         </>
                     )}
                 </div>
@@ -111,10 +117,10 @@ function TransactionItem({ transaction, onEdit, onDelete, searchTerm }: Transact
             </div>
 
             <div className="transaction-actions" style={{ opacity: 1 }}>
-                <button className="btn btn-icon btn-ghost" onClick={() => onEdit(transaction)} title="Editar">
+                <button className="btn btn-icon btn-ghost" onClick={() => onEdit(transaction)} title={t.common.edit}>
                     <Pencil size={16} />
                 </button>
-                <button className="btn btn-icon btn-ghost" onClick={() => onDelete(transaction.id)} title="Excluir">
+                <button className="btn btn-icon btn-ghost" onClick={() => onDelete(transaction.id)} title={t.common.delete}>
                     <Trash2 size={16} />
                 </button>
             </div>
@@ -125,9 +131,17 @@ function TransactionItem({ transaction, onEdit, onDelete, searchTerm }: Transact
 export function SearchPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+    const { t, language } = useLanguage();
 
     const { data: allTransactions, isLoading } = useTransactions();
     const deleteMutation = useDeleteTransaction();
+
+    const formatCurrency = (value: number): string => {
+        return new Intl.NumberFormat(language, {
+            style: 'currency',
+            currency: language === 'pt-BR' ? 'BRL' : 'USD',
+        }).format(value);
+    };
 
     // Filtra transações pela busca
     const filteredTransactions = useMemo(() => {
@@ -148,7 +162,7 @@ export function SearchPage() {
     }, [filteredTransactions]);
 
     const handleDelete = async (id: number) => {
-        if (confirm('Tem certeza que deseja excluir esta transação?')) {
+        if (confirm(t.transactions.confirmDelete)) {
             await deleteMutation.mutateAsync(id);
         }
     };
@@ -158,7 +172,7 @@ export function SearchPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Search size={28} />
-                    Buscar Transações
+                    {t.nav.search}
                 </h1>
             </div>
 
@@ -178,7 +192,7 @@ export function SearchPage() {
                     <input
                         type="text"
                         className="form-input"
-                        placeholder="Digite para buscar... (ex: aluguel, água, salário)"
+                        placeholder={t.transactions.searchPlaceholder}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{
@@ -199,7 +213,7 @@ export function SearchPage() {
                                 top: '50%',
                                 transform: 'translateY(-50%)'
                             }}
-                            title="Limpar busca"
+                            title={t.common.clear}
                         >
                             <X size={20} />
                         </button>
@@ -215,7 +229,7 @@ export function SearchPage() {
                         <div className="card" style={{ textAlign: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '0.5rem' }}>
                                 <TrendingUp size={18} color="var(--color-success)" />
-                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Total Receitas</span>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{t.transactions.totalIncome}</span>
                             </div>
                             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-success)' }}>
                                 {formatCurrency(totals.income)}
@@ -225,7 +239,7 @@ export function SearchPage() {
                         <div className="card" style={{ textAlign: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '0.5rem' }}>
                                 <TrendingDown size={18} color="var(--color-danger)" />
-                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Total Despesas</span>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{t.transactions.totalExpenses}</span>
                             </div>
                             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-danger)' }}>
                                 {formatCurrency(totals.expense)}
@@ -235,7 +249,7 @@ export function SearchPage() {
                         <div className="card" style={{ textAlign: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '0.5rem' }}>
                                 <Search size={18} color="var(--color-primary)" />
-                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Resultados</span>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{t.transactions.results}</span>
                             </div>
                             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                                 {totals.count}
@@ -247,7 +261,7 @@ export function SearchPage() {
                     <div className="card">
                         <div className="card-header">
                             <h3 className="card-title">
-                                Resultados para "{searchTerm}"
+                                {t.transactions.results} "{searchTerm}"
                             </h3>
                         </div>
 
@@ -255,9 +269,9 @@ export function SearchPage() {
                             <div className="loading"><div className="spinner"></div></div>
                         ) : filteredTransactions.length === 0 ? (
                             <div className="empty-state">
-                                <p>Nenhuma transação encontrada</p>
+                                <p>{t.transactions.noResults}</p>
                                 <p style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: 'var(--text-muted)' }}>
-                                    Tente buscar por outro termo
+                                    {t.transactions.tryAnother}
                                 </p>
                             </div>
                         ) : (
@@ -282,9 +296,9 @@ export function SearchPage() {
                 <div className="card">
                     <div className="empty-state" style={{ padding: '3rem' }}>
                         <Search size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
-                        <p style={{ fontSize: '1.125rem' }}>Digite algo para buscar</p>
+                        <p style={{ fontSize: '1.125rem' }}>{t.transactions.typeToSearch}</p>
                         <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: 'var(--text-muted)' }}>
-                            A busca encontra transações por descrição, ignorando acentos e maiúsculas/minúsculas
+                            {t.transactions.searchHint}
                         </p>
                     </div>
                 </div>
@@ -300,3 +314,4 @@ export function SearchPage() {
         </div>
     );
 }
+

@@ -4,18 +4,20 @@ import { TransactionList } from '../components/TransactionList';
 import { TransactionForm } from '../components/TransactionForm';
 import { CategoryList } from '../components/CategoryManager';
 import { SpendingByCategory } from '../components/SpendingByCategory';
+import { useLanguage } from '../i18n';
 import { Plus } from 'lucide-react';
 
 export function Dashboard() {
     const [showForm, setShowForm] = useState(false);
+    const { t } = useLanguage();
 
     return (
         <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 700 }}>Dashboard</h1>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 700 }}>{t.dashboard.title}</h1>
                 <button className="btn btn-primary" onClick={() => setShowForm(true)}>
                     <Plus size={18} />
-                    Nova Transação
+                    {t.dashboard.newTransaction}
                 </button>
             </div>
 
@@ -40,3 +42,4 @@ export function Dashboard() {
         </>
     );
 }
+

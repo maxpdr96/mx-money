@@ -1,15 +1,17 @@
 import { useBalance } from '../hooks/useApi';
+import { useLanguage } from '../i18n';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
-
-function formatCurrency(value: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-    }).format(value);
-}
 
 export function BalanceCard() {
     const { data: balance, isLoading, error } = useBalance();
+    const { t, language } = useLanguage();
+
+    const formatCurrency = (value: number): string => {
+        return new Intl.NumberFormat(language, {
+            style: 'currency',
+            currency: language === 'pt-BR' ? 'BRL' : 'USD',
+        }).format(value);
+    };
 
     if (isLoading) {
         return (
@@ -24,7 +26,7 @@ export function BalanceCard() {
     if (error || !balance) {
         return (
             <div className="card balance-card">
-                <p>Erro ao carregar saldo</p>
+                <p>{t.messages.errorLoading}</p>
             </div>
         );
     }
@@ -33,7 +35,7 @@ export function BalanceCard() {
         <div className="card balance-card">
             <div className="balance-label">
                 <Wallet size={16} style={{ display: 'inline', marginRight: '8px' }} />
-                Saldo Atual
+                {t.dashboard.currentBalance}
             </div>
             <div className="balance-amount">{formatCurrency(balance.currentBalance)}</div>
 
@@ -41,7 +43,7 @@ export function BalanceCard() {
                 <div className="balance-item">
                     <span className="balance-item-label">
                         <TrendingUp size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                        Receitas
+                        {t.dashboard.income}
                     </span>
                     <span className="balance-item-value income">
                         {formatCurrency(balance.totalIncome)}
@@ -50,7 +52,7 @@ export function BalanceCard() {
                 <div className="balance-item">
                     <span className="balance-item-label">
                         <TrendingDown size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                        Despesas
+                        {t.dashboard.expenses}
                     </span>
                     <span className="balance-item-value expense">
                         {formatCurrency(balance.totalExpense)}
@@ -60,3 +62,4 @@ export function BalanceCard() {
         </div>
     );
 }
+

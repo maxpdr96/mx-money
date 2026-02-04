@@ -10,31 +10,42 @@ import {
     AreaChart,
 } from 'recharts';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR, enUS } from 'date-fns/locale';
 import { Calendar, TrendingUp } from 'lucide-react';
-
-function formatCurrency(value: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-    }).format(value);
-}
-
-const PROJECTION_OPTIONS = [
-    { value: 30, label: '30 dias' },
-    { value: 60, label: '60 dias' },
-    { value: 90, label: '90 dias' },
-    { value: 180, label: '6 meses' },
-    { value: 365, label: '1 ano' },
-];
+import { useLanguage } from '../i18n';
 
 export function ProjectionPage() {
     const [days, setDays] = useState(30);
     const { data: projections, isLoading, error } = useBalanceProjection(days);
+    const { t, language } = useLanguage();
+
+    const formatCurrency = (value: number): string => {
+        return new Intl.NumberFormat(language, {
+            style: 'currency',
+            currency: language === 'pt-BR' ? 'BRL' : 'USD',
+        }).format(value);
+    };
+
+    const formatDate = (dateStr: string, formatStr: string): string => {
+        const date = new Date(dateStr + 'T00:00:00');
+        const locale = language === 'pt-BR' ? ptBR : enUS;
+        return format(date, formatStr, { locale });
+    };
+
+    const PROJECTION_OPTIONS = [
+        { value: 30, label: `30 ${t.projection.days}` },
+        { value: 60, label: `60 ${t.projection.days}` },
+        { value: 90, label: `90 ${t.projection.days}` },
+        { value: 180, label: `6 ${t.transactions.form.monthly}s`.replace('al', 'es') }, // "Mensais" hack or just use translations better? Let's use simple for now. 
+        // Actually let's just stick to days or use a map if needed.
+        // Simplified:
+        { value: 180, label: `180 ${t.projection.days}` },
+        { value: 365, label: `365 ${t.projection.days}` },
+    ];
 
     const chartData = projections?.map((p) => ({
         date: p.date,
-        dateFormatted: format(new Date(p.date + 'T00:00:00'), days > 90 ? 'MMM/yy' : 'dd/MM', { locale: ptBR }),
+        dateFormatted: formatDate(p.date, days > 90 ? 'MMM/yy' : 'dd/MM'),
         balance: p.balance,
         hasTransactions: p.transactions && p.transactions.length > 0,
     })) || [];
@@ -54,7 +65,7 @@ export function ProjectionPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Calendar size={28} />
-                    Projeção de Saldo
+                    {t.projection.title}
                 </h1>
 
                 <div className="type-toggle">
@@ -73,14 +84,14 @@ export function ProjectionPage() {
             {/* Cards de resumo */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div className="card">
-                    <div className="card-title">Saldo Atual</div>
+                    <div className="card-title">{t.projection.currentBalance}</div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 700, marginTop: '0.5rem' }}>
                         {formatCurrency(startBalance)}
                     </div>
                 </div>
 
                 <div className="card">
-                    <div className="card-title">Saldo em {days} dias</div>
+                    <div className="card-title">{t.projection.projectedBalance}</div>
                     <div style={{ fontSize: '1.5rem', fontWeight: 700, marginTop: '0.5rem', color: endBalance >= startBalance ? 'var(--color-success)' : 'var(--color-danger)' }}>
                         {formatCurrency(endBalance)}
                     </div>
@@ -101,7 +112,7 @@ export function ProjectionPage() {
             {/* Gráfico principal */}
             <div className="card">
                 <div className="card-header">
-                    <h3 className="card-title">Evolução do Saldo - Próximos {days} dias</h3>
+                    <h3 className="card-title">{t.projection.chart} - {days} {t.projection.days}</h3>
                 </div>
 
                 {isLoading ? (
@@ -109,7 +120,7 @@ export function ProjectionPage() {
                         <div className="spinner"></div>
                     </div>
                 ) : error ? (
-                    <p className="empty-state">Erro ao carregar projeção</p>
+                    <p className="empty-state">{t.messages.errorLoading}</p>
                 ) : (
                     <div style={{ height: '400px' }}>
                         <ResponsiveContainer width="100%" height="100%">
@@ -134,7 +145,7 @@ export function ProjectionPage() {
                                     fontSize={12}
                                     tickLine={false}
                                     axisLine={false}
-                                    tickFormatter={(value) => `R$${(value / 1000).toFixed(0)}k`}
+                                    tickFormatter={(value) => `${language === 'pt-BR' ? 'R$' : '$'}${(value / 1000).toFixed(0)}k`}
                                     domain={[minBalance - padding, maxBalance + padding]}
                                 />
                                 <Tooltip
@@ -144,7 +155,7 @@ export function ProjectionPage() {
                                         borderRadius: '8px',
                                         color: '#f8fafc',
                                     }}
-                                    formatter={(value) => [formatCurrency(Number(value)), 'Saldo']}
+                                    formatter={(value) => [formatCurrency(Number(value)), t.projection.currentBalance]}
                                     labelFormatter={(label) => `Data: ${label}`}
                                 />
                                 <Area
@@ -164,3 +175,4 @@ export function ProjectionPage() {
         </div>
     );
 }
+

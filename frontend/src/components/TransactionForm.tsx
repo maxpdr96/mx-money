@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useCreateTransaction, useUpdateTransaction, useCategories } from '../hooks/useApi';
+import { useLanguage } from '../i18n';
 import type { TransactionRequest, TransactionType, RecurrenceType, Transaction } from '../types';
 import { X } from 'lucide-react';
 
 interface TransactionFormProps {
     onClose: () => void;
     onSuccess?: () => void;
-    transaction?: Transaction; // Se fornecido, modo de edição
+    transaction?: Transaction;
 }
 
 export function TransactionForm({ onClose, onSuccess, transaction }: TransactionFormProps) {
     const isEditing = !!transaction;
+    const { t } = useLanguage();
 
     const [type, setType] = useState<TransactionType>(transaction?.type || 'EXPENSE');
     const [description, setDescription] = useState(transaction?.description || '');
@@ -26,7 +28,6 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
     const createMutation = useCreateTransaction();
     const updateMutation = useUpdateTransaction();
 
-    // Atualiza estado quando transaction muda (para edição)
     useEffect(() => {
         if (transaction) {
             setType(transaction.type);
@@ -61,7 +62,7 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
             onSuccess?.();
             onClose();
         } catch (error) {
-            console.error('Erro ao salvar transação:', error);
+            console.error('Error saving transaction:', error);
         }
     };
 
@@ -71,7 +72,9 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2 className="modal-title">{isEditing ? 'Editar Transação' : 'Nova Transação'}</h2>
+                    <h2 className="modal-title">
+                        {isEditing ? t.transactions.form.editTitle : t.transactions.form.title}
+                    </h2>
                     <button className="modal-close" onClick={onClose}>
                         <X size={24} />
                     </button>
@@ -79,34 +82,34 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label className="form-label">Tipo</label>
+                        <label className="form-label">{t.transactions.form.type}</label>
                         <div className="type-toggle">
                             <button
                                 type="button"
                                 className={`type-toggle-btn income ${type === 'INCOME' ? 'active' : ''}`}
                                 onClick={() => setType('INCOME')}
                             >
-                                Receita
+                                {t.transactions.form.income}
                             </button>
                             <button
                                 type="button"
                                 className={`type-toggle-btn expense ${type === 'EXPENSE' ? 'active' : ''}`}
                                 onClick={() => setType('EXPENSE')}
                             >
-                                Despesa
+                                {t.transactions.form.expense}
                             </button>
                         </div>
                     </div>
 
                     <div className="form-group">
                         <label className="form-label" htmlFor="description">
-                            Descrição
+                            {t.transactions.form.description}
                         </label>
                         <input
                             id="description"
                             type="text"
                             className="form-input"
-                            placeholder="Ex: Almoço, Salário, Conta de luz..."
+                            placeholder={t.transactions.form.descriptionPlaceholder}
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             required
@@ -116,7 +119,7 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
                     <div className="form-row">
                         <div className="form-group">
                             <label className="form-label" htmlFor="amount">
-                                Valor (R$)
+                                {t.transactions.form.amount}
                             </label>
                             <input
                                 id="amount"
@@ -127,7 +130,6 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
                                 value={amount}
                                 onChange={(e) => {
                                     const value = e.target.value;
-                                    // Permite apenas números, vírgula e ponto
                                     if (/^[\d,.]*$/.test(value)) {
                                         setAmount(value);
                                     }
@@ -138,7 +140,7 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
 
                         <div className="form-group">
                             <label className="form-label" htmlFor="date">
-                                Data Efetiva
+                                {t.transactions.form.effectiveDate}
                             </label>
                             <input
                                 id="date"
@@ -154,7 +156,7 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
                     <div className="form-row">
                         <div className="form-group">
                             <label className="form-label" htmlFor="category">
-                                Categoria
+                                {t.transactions.form.category}
                             </label>
                             <select
                                 id="category"
@@ -164,7 +166,7 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
                                     setCategoryId(e.target.value ? Number(e.target.value) : undefined)
                                 }
                             >
-                                <option value="">Sem categoria</option>
+                                <option value="">{t.transactions.form.noCategory}</option>
                                 {categories?.map((cat) => (
                                     <option key={cat.id} value={cat.id}>
                                         {cat.name}
@@ -175,7 +177,7 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
 
                         <div className="form-group">
                             <label className="form-label" htmlFor="recurrence">
-                                Recorrência
+                                {t.transactions.form.recurrence}
                             </label>
                             <select
                                 id="recurrence"
@@ -183,20 +185,19 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
                                 value={recurrence}
                                 onChange={(e) => setRecurrence(e.target.value as RecurrenceType)}
                             >
-                                <option value="NONE">Não repete</option>
-                                <option value="DAILY">Diária</option>
-                                <option value="WEEKLY">Semanal</option>
-                                <option value="MONTHLY">Mensal</option>
-                                <option value="YEARLY">Anual</option>
+                                <option value="NONE">{t.transactions.form.none}</option>
+                                <option value="DAILY">{t.transactions.form.daily}</option>
+                                <option value="WEEKLY">{t.transactions.form.weekly}</option>
+                                <option value="MONTHLY">{t.transactions.form.monthly}</option>
+                                <option value="YEARLY">{t.transactions.form.yearly}</option>
                             </select>
                         </div>
                     </div>
 
-                    {/* Data Final (apenas para recorrências) */}
                     {recurrence !== 'NONE' && (
                         <div className="form-group">
                             <label className="form-label" htmlFor="endDate">
-                                Data Final (opcional)
+                                {t.transactions.form.endDate}
                             </label>
                             <input
                                 id="endDate"
@@ -207,21 +208,25 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
                                 min={effectiveDate}
                             />
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
-                                Deixe vazio para repetir indefinidamente
+                                {t.transactions.form.endDateHint}
                             </span>
                         </div>
                     )}
 
                     <div className="modal-footer">
                         <button type="button" className="btn btn-ghost" onClick={onClose}>
-                            Cancelar
+                            {t.common.cancel}
                         </button>
                         <button
                             type="submit"
                             className={`btn ${type === 'INCOME' ? 'btn-success' : 'btn-danger'}`}
                             disabled={isPending}
                         >
-                            {isPending ? 'Salvando...' : isEditing ? 'Atualizar' : 'Salvar'}
+                            {isPending
+                                ? t.transactions.form.saving
+                                : isEditing
+                                    ? t.transactions.form.update
+                                    : t.common.save}
                         </button>
                     </div>
                 </form>

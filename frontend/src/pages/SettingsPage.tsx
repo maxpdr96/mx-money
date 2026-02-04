@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { backupApi, BackupInfo, BackupSettings } from '../api';
+import { useLanguage, Language } from '../i18n';
 import {
     Settings,
     Download,
@@ -10,10 +11,11 @@ import {
     HardDrive,
     Clock,
     Shield,
-    Folder
+    Folder,
+    Globe
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ptBR, enUS } from 'date-fns/locale';
 
 function formatBytes(bytes: number): string {
     if (bytes === 0) return '0 B';
@@ -23,11 +25,8 @@ function formatBytes(bytes: number): string {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-function formatDate(timestamp: number): string {
-    return format(new Date(timestamp), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR });
-}
-
 export function SettingsPage() {
+    const { t, language, setLanguage } = useLanguage();
     const [backups, setBackups] = useState<BackupInfo[]>([]);
     const [settings, setSettings] = useState<BackupSettings | null>(null);
     const [loading, setLoading] = useState(true);
@@ -35,6 +34,15 @@ export function SettingsPage() {
     const [newDirectory, setNewDirectory] = useState('');
     const [editingDirectory, setEditingDirectory] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const dateLocale = language === 'pt-BR' ? ptBR : enUS;
+
+    const formatDate = (timestamp: number): string => {
+        const pattern = language === 'pt-BR'
+            ? "dd 'de' MMMM 'às' HH:mm"
+            : "MMMM dd 'at' HH:mm";
+        return format(new Date(timestamp), pattern, { locale: dateLocale });
+    };
 
     const loadData = async () => {
         setLoading(true);
@@ -47,7 +55,7 @@ export function SettingsPage() {
             setSettings(backupSettings);
             setNewDirectory(backupSettings.backupDirectory);
         } catch {
-            showMessage('error', 'Erro ao carregar dados');
+            showMessage('error', t.messages.errorLoading);
         }
         setLoading(false);
     };
@@ -64,32 +72,32 @@ export function SettingsPage() {
     const handleCreateBackup = async () => {
         try {
             const result = await backupApi.create();
-            showMessage('success', `Backup criado: ${result.name}`);
+            showMessage('success', `${t.messages.backupCreated}: ${result.name}`);
             loadData();
         } catch {
-            showMessage('error', 'Erro ao criar backup');
+            showMessage('error', t.messages.errorSaving);
         }
     };
 
     const handleDeleteBackup = async (name: string) => {
-        if (!confirm(`Excluir backup "${name}"?`)) return;
+        if (!confirm(t.settings.backups.confirmDelete.replace('$1', name))) return;
         try {
             await backupApi.delete(name);
-            showMessage('success', 'Backup excluído');
+            showMessage('success', t.messages.backupDeleted);
             loadData();
         } catch {
-            showMessage('error', 'Erro ao excluir backup');
+            showMessage('error', t.messages.errorSaving);
         }
     };
 
     const handleRestoreBackup = async (name: string) => {
-        if (!confirm(`Restaurar banco a partir de "${name}"? Isso substituirá todos os dados atuais.`)) return;
+        if (!confirm(t.settings.backups.confirmRestore.replace('$1', name))) return;
         try {
             await backupApi.restore(name);
-            showMessage('success', 'Banco restaurado. Recarregue a página.');
+            showMessage('success', t.messages.backupRestored);
             loadData();
         } catch {
-            showMessage('error', 'Erro ao restaurar backup');
+            showMessage('error', t.messages.errorSaving);
         }
     };
 
@@ -101,17 +109,17 @@ export function SettingsPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!confirm('Importar este banco de dados? Isso substituirá todos os dados atuais.')) {
+        if (!confirm(t.settings.backups.confirmRestore.replace('$1', file.name))) {
             e.target.value = '';
             return;
         }
 
         try {
             await backupApi.importDatabase(file);
-            showMessage('success', 'Banco importado. Recarregue a página.');
+            showMessage('success', t.messages.databaseImported);
             loadData();
         } catch {
-            showMessage('error', 'Erro ao importar banco');
+            showMessage('error', t.messages.errorSaving);
         }
         e.target.value = '';
     };
@@ -121,26 +129,31 @@ export function SettingsPage() {
         try {
             const updated = await backupApi.setAutoBackup(!settings.autoBackupEnabled);
             setSettings(updated);
-            showMessage('success', `Backup automático ${updated.autoBackupEnabled ? 'ativado' : 'desativado'}`);
+            showMessage('success', t.messages.settingsSaved);
         } catch {
-            showMessage('error', 'Erro ao alterar configuração');
+            showMessage('error', t.messages.errorSaving);
         }
     };
 
     const handleSaveDirectory = async () => {
         if (!newDirectory.trim()) {
-            showMessage('error', 'Digite um caminho válido');
+            showMessage('error', t.messages.errorSaving);
             return;
         }
         try {
             const updated = await backupApi.setDirectory(newDirectory.trim());
             setSettings(updated);
             setEditingDirectory(false);
-            showMessage('success', 'Diretório de backup alterado');
+            showMessage('success', t.messages.settingsSaved);
             loadData();
         } catch {
-            showMessage('error', 'Erro ao alterar diretório');
+            showMessage('error', t.messages.errorSaving);
         }
+    };
+
+    const handleLanguageChange = (lang: Language) => {
+        setLanguage(lang);
+        showMessage('success', t.messages.settingsSaved);
     };
 
     return (
@@ -148,7 +161,7 @@ export function SettingsPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Settings size={28} />
-                    Configurações
+                    {t.settings.title}
                 </h1>
             </div>
 
@@ -169,27 +182,56 @@ export function SettingsPage() {
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                {/* Language Section */}
+                <div className="card">
+                    <div className="card-header">
+                        <h3 className="card-title">
+                            <Globe size={18} style={{ marginRight: '8px' }} />
+                            {t.settings.language.title}
+                        </h3>
+                    </div>
+
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                        {t.settings.language.description}
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <button
+                            className={`btn ${language === 'pt-BR' ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => handleLanguageChange('pt-BR')}
+                        >
+                            🇧🇷 {t.settings.language.portuguese}
+                        </button>
+                        <button
+                            className={`btn ${language === 'en' ? 'btn-primary' : 'btn-ghost'}`}
+                            onClick={() => handleLanguageChange('en')}
+                        >
+                            🇺🇸 {t.settings.language.english}
+                        </button>
+                    </div>
+                </div>
+
                 {/* Export/Import Section */}
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">
                             <HardDrive size={18} style={{ marginRight: '8px' }} />
-                            Banco de Dados
+                            {t.settings.database.title}
                         </h3>
                     </div>
 
                     <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                        Exporte seu banco de dados para backup externo ou importe um arquivo existente.
+                        {t.settings.database.description}
                     </p>
 
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                         <button className="btn btn-primary" onClick={handleExport}>
                             <Download size={16} />
-                            Exportar
+                            {t.settings.database.export}
                         </button>
                         <button className="btn btn-ghost" onClick={() => fileInputRef.current?.click()}>
                             <Upload size={16} />
-                            Importar
+                            {t.settings.database.import}
                         </button>
                         <input
                             ref={fileInputRef}
@@ -206,7 +248,7 @@ export function SettingsPage() {
                     <div className="card-header">
                         <h3 className="card-title">
                             <Clock size={18} style={{ marginRight: '8px' }} />
-                            Backup Automático
+                            {t.settings.autoBackup.title}
                         </h3>
                     </div>
 
@@ -216,9 +258,9 @@ export function SettingsPage() {
                         <>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                                 <div>
-                                    <div style={{ fontWeight: 500 }}>Backup diário</div>
+                                    <div style={{ fontWeight: 500 }}>{t.settings.autoBackup.daily}</div>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                        Cria backup automaticamente à meia-noite
+                                        {t.settings.autoBackup.dailyDescription}
                                     </div>
                                 </div>
                                 <button
@@ -226,76 +268,76 @@ export function SettingsPage() {
                                     onClick={handleToggleAutoBackup}
                                     style={{ minWidth: '100px' }}
                                 >
-                                    {settings.autoBackupEnabled ? 'Ativado' : 'Desativado'}
+                                    {settings.autoBackupEnabled ? t.settings.autoBackup.enabled : t.settings.autoBackup.disabled}
                                 </button>
                             </div>
 
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                                 <Shield size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                                Máximo de {settings.maxBackups} backups mantidos (mais antigos são removidos)
+                                {settings.maxBackups} {t.settings.autoBackup.maxBackups}
                             </div>
                         </>
                     )}
                 </div>
-            </div>
 
-            {/* Backup Directory */}
-            <div className="card" style={{ marginTop: '1.5rem' }}>
-                <div className="card-header">
-                    <h3 className="card-title">
-                        <Folder size={18} style={{ marginRight: '8px' }} />
-                        Diretório de Backups
-                    </h3>
-                </div>
-
-                {loading ? (
-                    <div className="loading"><div className="spinner"></div></div>
-                ) : settings && (
-                    <div>
-                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                            Escolha onde os backups serão salvos. Use um caminho absoluto.
-                        </p>
-
-                        {editingDirectory ? (
-                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    value={newDirectory}
-                                    onChange={(e) => setNewDirectory(e.target.value)}
-                                    placeholder="/caminho/para/backups"
-                                    style={{ flex: 1 }}
-                                />
-                                <button className="btn btn-primary" onClick={handleSaveDirectory}>
-                                    <Save size={16} />
-                                    Salvar
-                                </button>
-                                <button className="btn btn-ghost" onClick={() => {
-                                    setEditingDirectory(false);
-                                    setNewDirectory(settings.backupDirectory);
-                                }}>
-                                    Cancelar
-                                </button>
-                            </div>
-                        ) : (
-                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                <code style={{
-                                    flex: 1,
-                                    padding: '12px',
-                                    background: 'var(--surface-secondary)',
-                                    borderRadius: '8px',
-                                    fontSize: '0.875rem',
-                                    wordBreak: 'break-all'
-                                }}>
-                                    {settings.backupDirectory}
-                                </code>
-                                <button className="btn btn-ghost" onClick={() => setEditingDirectory(true)}>
-                                    Alterar
-                                </button>
-                            </div>
-                        )}
+                {/* Backup Directory */}
+                <div className="card">
+                    <div className="card-header">
+                        <h3 className="card-title">
+                            <Folder size={18} style={{ marginRight: '8px' }} />
+                            {t.settings.backupDirectory.title}
+                        </h3>
                     </div>
-                )}
+
+                    {loading ? (
+                        <div className="loading"><div className="spinner"></div></div>
+                    ) : settings && (
+                        <div>
+                            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                                {t.settings.backupDirectory.description}
+                            </p>
+
+                            {editingDirectory ? (
+                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        value={newDirectory}
+                                        onChange={(e) => setNewDirectory(e.target.value)}
+                                        placeholder="/path/to/backups"
+                                        style={{ flex: 1 }}
+                                    />
+                                    <button className="btn btn-primary" onClick={handleSaveDirectory}>
+                                        <Save size={16} />
+                                        {t.common.save}
+                                    </button>
+                                    <button className="btn btn-ghost" onClick={() => {
+                                        setEditingDirectory(false);
+                                        setNewDirectory(settings.backupDirectory);
+                                    }}>
+                                        {t.common.cancel}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                    <code style={{
+                                        flex: 1,
+                                        padding: '12px',
+                                        background: 'var(--surface-secondary)',
+                                        borderRadius: '8px',
+                                        fontSize: '0.875rem',
+                                        wordBreak: 'break-all'
+                                    }}>
+                                        {settings.backupDirectory}
+                                    </code>
+                                    <button className="btn btn-ghost" onClick={() => setEditingDirectory(true)}>
+                                        {t.settings.backupDirectory.change}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Backups List */}
@@ -303,15 +345,15 @@ export function SettingsPage() {
                 <div className="card-header">
                     <h3 className="card-title">
                         <Save size={18} style={{ marginRight: '8px' }} />
-                        Backups Salvos ({backups.length}/5)
+                        {t.settings.backups.title} ({backups.length}/5)
                     </h3>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-icon btn-ghost" onClick={loadData} title="Atualizar">
+                        <button className="btn btn-icon btn-ghost" onClick={loadData} title="Refresh">
                             <RefreshCw size={16} />
                         </button>
                         <button className="btn btn-primary" onClick={handleCreateBackup}>
                             <Save size={16} />
-                            Criar Backup
+                            {t.settings.backups.createBackup}
                         </button>
                     </div>
                 </div>
@@ -320,9 +362,9 @@ export function SettingsPage() {
                     <div className="loading"><div className="spinner"></div></div>
                 ) : backups.length === 0 ? (
                     <div className="empty-state">
-                        <p>Nenhum backup encontrado</p>
+                        <p>{t.settings.backups.noBackups}</p>
                         <p style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                            Clique em "Criar Backup" para criar o primeiro
+                            {t.settings.backups.createFirst}
                         </p>
                     </div>
                 ) : (
@@ -344,16 +386,16 @@ export function SettingsPage() {
                                     <button
                                         className="btn btn-ghost"
                                         onClick={() => handleRestoreBackup(backup.name)}
-                                        title="Restaurar"
+                                        title={t.settings.backups.restore}
                                         style={{ fontSize: '0.75rem' }}
                                     >
                                         <RefreshCw size={14} />
-                                        Restaurar
+                                        {t.settings.backups.restore}
                                     </button>
                                     <button
                                         className="btn btn-icon btn-ghost"
                                         onClick={() => handleDeleteBackup(backup.name)}
-                                        title="Excluir"
+                                        title={t.common.delete}
                                     >
                                         <Trash2 size={16} />
                                     </button>
