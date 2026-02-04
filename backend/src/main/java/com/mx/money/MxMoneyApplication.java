@@ -9,6 +9,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class MxMoneyApplication {
 
     public static void main(String[] args) {
+        // Garante que o diretório de dados existe antes de iniciar o Spring/Hibernate
+        new java.io.File("./data").mkdirs();
         SpringApplication.run(MxMoneyApplication.class, args);
     }
 }
