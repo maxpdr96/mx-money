@@ -112,14 +112,27 @@ export function TransactionsPage() {
         }).format(value);
     };
 
-    // Gera lista de anos disponíveis (atual até 5 anos atrás)
+    // Gera lista de anos disponíveis baseada nas transações e no ano atual
     const availableYears = useMemo(() => {
-        const years = [];
-        for (let i = 0; i < 6; i++) {
-            years.push(currentDate.getFullYear() - i);
+        const years = new Set<number>();
+        years.add(currentDate.getFullYear()); // Garante ano atual
+
+        // Adiciona anos das transações existentes
+        if (allTransactions) {
+            allTransactions.forEach(t => {
+                // effectiveDate é string "YYYY-MM-DD"
+                const year = parseInt(t.effectiveDate.substring(0, 4));
+                years.add(year);
+            });
         }
-        return years;
-    }, [currentDate]);
+
+        // Garante pelo menos os últimos 5 anos para histórico
+        for (let i = 1; i < 6; i++) {
+            years.add(currentDate.getFullYear() - i);
+        }
+
+        return Array.from(years).sort((a, b) => b - a);
+    }, [currentDate, allTransactions]);
 
     // Filtra transações pelo mês/ano selecionado
     const filteredTransactions = useMemo(() => {
