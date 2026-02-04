@@ -196,7 +196,7 @@ export function TransactionsPage() {
             </div>
 
             {/* Meses */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', marginBottom: '1.5rem' }}>
+            <div className="grid-months">
                 <button
                     className={`btn ${selectedMonth === null ? 'btn-primary' : 'btn-ghost'}`}
                     onClick={() => setSelectedMonth(null)}
@@ -222,7 +222,7 @@ export function TransactionsPage() {
             </div>
 
             {/* Cards de resumo */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="grid-summary-3">
                 <div className="card" style={{ textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '0.5rem' }}>
                         <TrendingUp size={18} color="var(--color-success)" />

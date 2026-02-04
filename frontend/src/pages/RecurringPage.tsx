@@ -146,9 +146,9 @@ export function RecurringPage() {
             </div>
 
             {/* Cards de Resumo + Gráfico */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', marginBottom: '1.5rem' }}>
+            <div className="grid-recurring-layout">
                 {/* Cards por tipo */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                <div className="grid-recurring-cards">
                     {RECURRENCE_TABS.map((type) => {
                         const count = byRecurrence[type]?.length || 0;
                         const totals = totalByTab(type);

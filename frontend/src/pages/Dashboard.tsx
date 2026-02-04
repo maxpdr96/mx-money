@@ -13,7 +13,7 @@ export function Dashboard() {
 
     return (
         <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div className="dashboard-header-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 700 }}>{t.dashboard.title}</h1>
                 <button className="btn btn-primary" onClick={() => setShowForm(true)}>
                     <Plus size={18} />
