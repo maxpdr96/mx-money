@@ -135,6 +135,16 @@ export function SettingsPage() {
         }
     };
 
+    const handleIntervalChange = async (hours: number) => {
+        try {
+            const updated = await backupApi.setInterval(hours);
+            setSettings(updated);
+            showMessage('success', t.messages.settingsSaved);
+        } catch {
+            showMessage('error', t.messages.errorSaving);
+        }
+    };
+
     const handleSaveDirectory = async () => {
         if (!newDirectory.trim()) {
             showMessage('error', t.messages.errorSaving);
@@ -270,6 +280,34 @@ export function SettingsPage() {
                                 >
                                     {settings.autoBackupEnabled ? t.settings.autoBackup.enabled : t.settings.autoBackup.disabled}
                                 </button>
+                            </div>
+
+                            {/* Interval Selector */}
+                            <div style={{ marginBottom: '1rem' }}>
+                                <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>{t.settings.autoBackup.interval}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                                    {t.settings.autoBackup.intervalDescription}
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button
+                                        className={`btn ${settings.backupIntervalHours === 1 ? 'btn-primary' : 'btn-ghost'}`}
+                                        onClick={() => handleIntervalChange(1)}
+                                    >
+                                        {t.settings.autoBackup.hourly}
+                                    </button>
+                                    <button
+                                        className={`btn ${settings.backupIntervalHours === 4 ? 'btn-primary' : 'btn-ghost'}`}
+                                        onClick={() => handleIntervalChange(4)}
+                                    >
+                                        {t.settings.autoBackup.every4Hours}
+                                    </button>
+                                    <button
+                                        className={`btn ${settings.backupIntervalHours === 24 ? 'btn-primary' : 'btn-ghost'}`}
+                                        onClick={() => handleIntervalChange(24)}
+                                    >
+                                        {t.settings.autoBackup.daily24h}
+                                    </button>
+                                </div>
                             </div>
 
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>

@@ -127,4 +127,17 @@ public class BackupController {
         backupService.setBackupDirectory(directory);
         return ResponseEntity.ok(backupService.getSettings());
     }
+
+    /**
+     * Update backup interval
+     */
+    @PutMapping("/settings/interval")
+    public ResponseEntity<Map<String, Object>> setBackupInterval(@RequestBody Map<String, Integer> body) {
+        Integer hours = body.get("hours");
+        if (hours == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Hours is required"));
+        }
+        backupService.setBackupInterval(hours);
+        return ResponseEntity.ok(backupService.getSettings());
+    }
 }

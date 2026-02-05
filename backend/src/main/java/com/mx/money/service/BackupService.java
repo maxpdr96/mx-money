@@ -30,6 +30,7 @@ public class BackupService {
 
     private Path backupDir;
     private boolean autoBackupEnabled = true;
+    private int backupIntervalHours = 24;
 
     public BackupService() {
         loadSettings();
@@ -61,6 +62,15 @@ public class BackupService {
                 if (auto != null) {
                     this.autoBackupEnabled = Boolean.parseBoolean(auto);
                 }
+
+                String interval = props.getProperty("backupIntervalHours");
+                if (interval != null) {
+                    try {
+                        this.backupIntervalHours = Integer.parseInt(interval);
+                    } catch (NumberFormatException e) {
+                        log.warn("Invalid backup interval, using default");
+                    }
+                }
             } catch (IOException e) {
                 log.warn("Failed to load backup settings, using defaults", e);
             }
@@ -76,6 +86,7 @@ public class BackupService {
             Properties props = new Properties();
             props.setProperty("backupDirectory", backupDir.toAbsolutePath().toString());
             props.setProperty("autoBackupEnabled", String.valueOf(autoBackupEnabled));
+            props.setProperty("backupIntervalHours", String.valueOf(backupIntervalHours));
             props.store(Files.newOutputStream(SETTINGS_FILE), "MX-Money Backup Settings");
         } catch (IOException e) {
             log.error("Failed to save backup settings", e);
@@ -214,6 +225,7 @@ public class BackupService {
         settings.put("autoBackupEnabled", autoBackupEnabled);
         settings.put("maxBackups", MAX_BACKUPS);
         settings.put("backupDirectory", backupDir.toAbsolutePath().toString());
+        settings.put("backupIntervalHours", backupIntervalHours);
         return settings;
     }
 
@@ -239,6 +251,22 @@ public class BackupService {
 
     public boolean isAutoBackupEnabled() {
         return autoBackupEnabled;
+    }
+
+    /**
+     * Updates backup interval
+     */
+    public void setBackupInterval(int hours) {
+        if (hours != 1 && hours != 4 && hours != 24) {
+            throw new IllegalArgumentException("Invalid interval. Must be 1, 4, or 24 hours.");
+        }
+        this.backupIntervalHours = hours;
+        saveSettings();
+        log.info("Backup interval changed to: {} hours", hours);
+    }
+
+    public int getBackupIntervalHours() {
+        return backupIntervalHours;
     }
 
     /**

@@ -130,6 +130,11 @@ export interface Translations {
             enabled: string;
             disabled: string;
             maxBackups: string;
+            interval: string;
+            intervalDescription: string;
+            hourly: string;
+            every4Hours: string;
+            daily24h: string;
         };
         backupDirectory: {
             title: string;
@@ -287,11 +292,16 @@ export const translations: Record<Language, Translations> = {
             },
             autoBackup: {
                 title: 'Backup Automático',
-                daily: 'Backup diário',
-                dailyDescription: 'Cria backup automaticamente à meia-noite',
+                daily: 'Backup automático',
+                dailyDescription: 'Cria backup automaticamente no intervalo selecionado',
                 enabled: 'Ativado',
                 disabled: 'Desativado',
                 maxBackups: 'backups mantidos (mais antigos são removidos)',
+                interval: 'Intervalo de Backup',
+                intervalDescription: 'Com que frequência o backup automático será criado',
+                hourly: '1 hora',
+                every4Hours: '4 horas',
+                daily24h: '24 horas',
             },
             backupDirectory: {
                 title: 'Diretório de Backups',
@@ -443,11 +453,16 @@ export const translations: Record<Language, Translations> = {
             },
             autoBackup: {
                 title: 'Automatic Backup',
-                daily: 'Daily backup',
-                dailyDescription: 'Creates backup automatically at midnight',
+                daily: 'Automatic backup',
+                dailyDescription: 'Creates backup automatically at selected interval',
                 enabled: 'Enabled',
                 disabled: 'Disabled',
                 maxBackups: 'backups kept (older ones are removed)',
+                interval: 'Backup Interval',
+                intervalDescription: 'How often automatic backup will be created',
+                hourly: '1 hour',
+                every4Hours: '4 hours',
+                daily24h: '24 hours',
             },
             backupDirectory: {
                 title: 'Backup Directory',

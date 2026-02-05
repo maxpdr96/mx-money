@@ -123,6 +123,7 @@ export interface BackupSettings {
     autoBackupEnabled: boolean;
     maxBackups: number;
     backupDirectory: string;
+    backupIntervalHours: number;
 }
 
 export const backupApi = {
@@ -170,6 +171,11 @@ export const backupApi = {
 
     setDirectory: async (directory: string): Promise<BackupSettings> => {
         const { data } = await api.put<BackupSettings>('/backup/settings/directory', { directory });
+        return data;
+    },
+
+    setInterval: async (hours: number): Promise<BackupSettings> => {
+        const { data } = await api.put<BackupSettings>('/backup/settings/interval', { hours });
         return data;
     },
 };
