@@ -5,6 +5,7 @@ export interface Translations {
     nav: {
         dashboard: string;
         transactions: string;
+        calendar: string;
         search: string;
         projection: string;
         recurring: string;
@@ -179,6 +180,7 @@ export const translations: Record<Language, Translations> = {
         nav: {
             dashboard: 'Dashboard',
             transactions: 'Transações',
+            calendar: 'Calendário',
             search: 'Buscar',
             projection: 'Projeção',
             recurring: 'Recorrentes',
@@ -333,6 +335,7 @@ export const translations: Record<Language, Translations> = {
         nav: {
             dashboard: 'Dashboard',
             transactions: 'Transactions',
+            calendar: 'Calendar',
             search: 'Search',
             projection: 'Projection',
             recurring: 'Recurring',

@@ -4,6 +4,7 @@ import { Dashboard } from './pages/Dashboard';
 import { ProjectionPage } from './pages/ProjectionPage';
 import { RecurringPage } from './pages/RecurringPage';
 import { TransactionsPage } from './pages/TransactionsPage';
+import { CalendarPage } from './pages/CalendarPage';
 import { SearchPage } from './pages/SearchPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ReportsPage } from './pages/ReportsPage';
@@ -21,7 +22,7 @@ const queryClient = new QueryClient({
   },
 });
 
-type Page = 'dashboard' | 'transactions' | 'search' | 'projection' | 'recurring' | 'reports' | 'settings';
+type Page = 'dashboard' | 'transactions' | 'calendar' | 'search' | 'projection' | 'recurring' | 'reports' | 'settings';
 
 function ThemeToggle() {
   const [isDark, setIsDark] = useState(() => {
@@ -76,6 +77,13 @@ function AppContent() {
             </a>
             <a
               href="#"
+              className={`nav-link ${currentPage === 'calendar' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setCurrentPage('calendar'); }}
+            >
+              {t.nav.calendar}
+            </a>
+            <a
+              href="#"
               className={`nav-link ${currentPage === 'search' ? 'active' : ''}`}
               onClick={(e) => { e.preventDefault(); setCurrentPage('search'); }}
             >
@@ -117,6 +125,7 @@ function AppContent() {
       <main className="main-content">
         {currentPage === 'dashboard' && <Dashboard />}
         {currentPage === 'transactions' && <TransactionsPage />}
+        {currentPage === 'calendar' && <CalendarPage />}
         {currentPage === 'search' && <SearchPage />}
         {currentPage === 'projection' && <ProjectionPage />}
         {currentPage === 'recurring' && <RecurringPage />}
