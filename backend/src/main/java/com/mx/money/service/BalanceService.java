@@ -2,6 +2,7 @@ package com.mx.money.service;
 
 import com.mx.money.dto.BalanceProjection;
 import com.mx.money.dto.BalanceResponse;
+import com.mx.money.dto.SimulationResponse;
 import com.mx.money.entity.RecurrenceType;
 import com.mx.money.entity.Transaction;
 import com.mx.money.entity.TransactionType;
@@ -140,5 +141,107 @@ public class BalanceService {
         }
 
         return occurrences;
+    }
+
+    /**
+     * Simula o impacto de uma compra hipotética no saldo futuro
+     * 
+     * @param amount      Valor da compra/despesa
+     * @param days        Dias de projeção
+     * @param recurrence  Tipo de recorrência (NONE, MONTHLY, WEEKLY, DAILY, YEARLY)
+     * @param occurrences Número de ocorrências
+     */
+    public SimulationResponse simulatePurchase(BigDecimal amount, int days, String recurrence, int occurrences) {
+        // Obtém projeção normal
+        List<BalanceProjection> originalProjections = getProjection(days);
+        LocalDate today = LocalDate.now();
+
+        // Calcula as datas de dedução baseado na recorrência
+        List<LocalDate> deductionDates = new ArrayList<>();
+        RecurrenceType recType = RecurrenceType.valueOf(recurrence.toUpperCase());
+
+        if (recType == RecurrenceType.NONE) {
+            // Dedução única no dia de hoje
+            deductionDates.add(today);
+        } else {
+            // Múltiplas deduções conforme recorrência
+            LocalDate currentDate = today;
+            for (int i = 0; i < occurrences; i++) {
+                deductionDates.add(currentDate);
+                currentDate = switch (recType) {
+                    case DAILY -> currentDate.plusDays(1);
+                    case WEEKLY -> currentDate.plusWeeks(1);
+                    case MONTHLY -> currentDate.plusMonths(1);
+                    case YEARLY -> currentDate.plusYears(1);
+                    default -> currentDate;
+                };
+            }
+        }
+
+        // Aplica as deduções cumulativas por data
+        List<BalanceProjection> adjustedProjections = new ArrayList<>();
+
+        for (BalanceProjection p : originalProjections) {
+            // Conta quantas deduções ocorreram até esta data (inclusive)
+            long deductionsUntilDate = deductionDates.stream()
+                    .filter(d -> !d.isAfter(p.getDate()))
+                    .count();
+            BigDecimal cumulativeDeduction = amount.multiply(BigDecimal.valueOf(deductionsUntilDate));
+
+            adjustedProjections.add(BalanceProjection.builder()
+                    .date(p.getDate())
+                    .balance(p.getBalance().subtract(cumulativeDeduction))
+                    .transactions(p.getTransactions())
+                    .build());
+        }
+
+        // Encontra o primeiro dia com saldo negativo
+        boolean goesNegative = false;
+        LocalDate negativeDate = null;
+        String negativeReason = null;
+        BigDecimal minimumBalance = null;
+        LocalDate minimumBalanceDate = null;
+
+        for (BalanceProjection projection : adjustedProjections) {
+            // Track minimum balance
+            if (minimumBalance == null || projection.getBalance().compareTo(minimumBalance) < 0) {
+                minimumBalance = projection.getBalance();
+                minimumBalanceDate = projection.getDate();
+            }
+
+            // Track first negative day
+            if (!goesNegative && projection.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+                goesNegative = true;
+                negativeDate = projection.getDate();
+
+                // Identify the transaction that caused the negative balance
+                if (projection.getTransactions() != null && !projection.getTransactions().isEmpty()) {
+                    negativeReason = projection.getTransactions().stream()
+                            .filter(t -> "EXPENSE".equals(t.getType()))
+                            .findFirst()
+                            .map(t -> t.getDescription())
+                            .orElse(null);
+                }
+
+                // If no expense on that day, it's the simulated purchase itself
+                if (negativeReason == null) {
+                    negativeReason = "Compra simulada";
+                }
+            }
+        }
+
+        // Calcula o valor total simulado
+        BigDecimal totalSimulated = amount.multiply(BigDecimal.valueOf(
+                recType == RecurrenceType.NONE ? 1 : occurrences));
+
+        return SimulationResponse.builder()
+                .simulatedAmount(totalSimulated)
+                .projections(adjustedProjections)
+                .goesNegative(goesNegative)
+                .negativeDate(negativeDate)
+                .negativeReason(negativeReason)
+                .minimumBalance(minimumBalance)
+                .minimumBalanceDate(minimumBalanceDate)
+                .build();
     }
 }

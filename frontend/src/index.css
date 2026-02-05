@@ -988,3 +988,21 @@ body {
     padding: 0.25rem;
   }
 }
+
+/* ================================
+   Simulator Styles
+================================ */
+.simulator-result {
+  border-left: 4px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.simulator-result.safe {
+  border-left-color: var(--color-success);
+  background: var(--color-success-light);
+}
+
+.simulator-result.danger {
+  border-left-color: var(--color-danger);
+  background: var(--color-danger-light);
+}

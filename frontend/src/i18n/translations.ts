@@ -8,6 +8,7 @@ export interface Translations {
         calendar: string;
         search: string;
         projection: string;
+        simulator: string;
         recurring: string;
         settings: string;
     };
@@ -183,6 +184,7 @@ export const translations: Record<Language, Translations> = {
             calendar: 'Calendário',
             search: 'Buscar',
             projection: 'Projeção',
+            simulator: 'Simulador',
             recurring: 'Recorrentes',
             settings: 'Configurações',
         },
@@ -338,6 +340,7 @@ export const translations: Record<Language, Translations> = {
             calendar: 'Calendar',
             search: 'Search',
             projection: 'Projection',
+            simulator: 'Simulator',
             recurring: 'Recurring',
             settings: 'Settings',
         },

@@ -92,7 +92,25 @@ export const balanceApi = {
         });
         return data;
     },
+
+    simulate: async (amount: number, days: number = 30, recurrence: string = 'NONE', occurrences: number = 1): Promise<SimulationResponse> => {
+        const { data } = await api.get<SimulationResponse>('/balance/simulate', {
+            params: { amount, days, recurrence, occurrences },
+        });
+        return data;
+    },
 };
+
+// Simulation Response
+export interface SimulationResponse {
+    simulatedAmount: number;
+    projections: BalanceProjection[];
+    goesNegative: boolean;
+    negativeDate: string | null;
+    negativeReason: string | null;
+    minimumBalance: number;
+    minimumBalanceDate: string;
+}
 
 // Backup
 export interface BackupInfo {

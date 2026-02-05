@@ -36,11 +36,10 @@ export function ProjectionPage() {
         { value: 30, label: `30 ${t.projection.days}` },
         { value: 60, label: `60 ${t.projection.days}` },
         { value: 90, label: `90 ${t.projection.days}` },
-        { value: 180, label: `6 ${t.transactions.form.monthly}s`.replace('al', 'es') }, // "Mensais" hack or just use translations better? Let's use simple for now. 
-        // Actually let's just stick to days or use a map if needed.
-        // Simplified:
         { value: 180, label: `180 ${t.projection.days}` },
-        { value: 365, label: `365 ${t.projection.days}` },
+        { value: 365, label: language === 'pt-BR' ? '1 ano' : '1 year' },
+        { value: 730, label: language === 'pt-BR' ? '2 anos' : '2 years' },
+        { value: 3650, label: language === 'pt-BR' ? '10 anos' : '10 years' },
     ];
 
     const chartData = projections?.map((p) => ({

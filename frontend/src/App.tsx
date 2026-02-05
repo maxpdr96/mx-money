@@ -5,6 +5,7 @@ import { ProjectionPage } from './pages/ProjectionPage';
 import { RecurringPage } from './pages/RecurringPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { CalendarPage } from './pages/CalendarPage';
+import { SimulatorPage } from './pages/SimulatorPage';
 import { SearchPage } from './pages/SearchPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ReportsPage } from './pages/ReportsPage';
@@ -22,7 +23,7 @@ const queryClient = new QueryClient({
   },
 });
 
-type Page = 'dashboard' | 'transactions' | 'calendar' | 'search' | 'projection' | 'recurring' | 'reports' | 'settings';
+type Page = 'dashboard' | 'transactions' | 'calendar' | 'search' | 'projection' | 'simulator' | 'recurring' | 'reports' | 'settings';
 
 function ThemeToggle() {
   const [isDark, setIsDark] = useState(() => {
@@ -98,6 +99,13 @@ function AppContent() {
             </a>
             <a
               href="#"
+              className={`nav-link ${currentPage === 'simulator' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setCurrentPage('simulator'); }}
+            >
+              {t.nav.simulator}
+            </a>
+            <a
+              href="#"
               className={`nav-link ${currentPage === 'recurring' ? 'active' : ''}`}
               onClick={(e) => { e.preventDefault(); setCurrentPage('recurring'); }}
             >
@@ -128,6 +136,7 @@ function AppContent() {
         {currentPage === 'calendar' && <CalendarPage />}
         {currentPage === 'search' && <SearchPage />}
         {currentPage === 'projection' && <ProjectionPage />}
+        {currentPage === 'simulator' && <SimulatorPage />}
         {currentPage === 'recurring' && <RecurringPage />}
         {currentPage === 'reports' && <ReportsPage />}
         {currentPage === 'settings' && <SettingsPage />}
