@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../hooks/useApi';
 import type { CategoryRequest, Category } from '../types';
 import { X, Plus, Tag, Pencil, Trash2 } from 'lucide-react';
@@ -144,6 +144,11 @@ export function CategoryList() {
     const [showForm, setShowForm] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
+    const sortedCategories = useMemo(() => {
+        if (!categories) return [];
+        return [...categories].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    }, [categories]);
+
     const handleEdit = (category: Category) => {
         setEditingCategory(category);
     };
@@ -181,13 +186,13 @@ export function CategoryList() {
                     </button>
                 </div>
 
-                {!categories || categories.length === 0 ? (
+                {!sortedCategories || sortedCategories.length === 0 ? (
                     <div className="empty-state">
                         <p>Nenhuma categoria cadastrada</p>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {categories.map((cat) => (
+                        {sortedCategories.map((cat) => (
                             <div
                                 key={cat.id}
                                 className="transaction-item"

@@ -197,4 +197,29 @@ export const reportsApi = {
     },
 };
 
+// CSV Import
+export interface CsvImportItem {
+    date: string;
+    description: string;
+    amount: number;
+    category: string;
+}
+
+export const csvImportApi = {
+    upload: async (file: File): Promise<CsvImportItem[]> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const { data } = await api.post<CsvImportItem[]>('/csv/import', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120000, // 2 min timeout for AI processing
+        });
+        return data;
+    },
+
+    save: async (items: CsvImportItem[]): Promise<void> => {
+        await api.post('/csv/import/save', items);
+    },
+};
+
 export default api;
+

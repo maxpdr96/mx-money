@@ -7,6 +7,7 @@ import { TransactionsPage } from './pages/TransactionsPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { SimulatorPage } from './pages/SimulatorPage';
 import { SearchPage } from './pages/SearchPage';
+import { ImportPage } from './pages/ImportPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { LanguageProvider, useLanguage } from './i18n';
@@ -23,7 +24,7 @@ const queryClient = new QueryClient({
   },
 });
 
-type Page = 'dashboard' | 'transactions' | 'calendar' | 'search' | 'projection' | 'simulator' | 'recurring' | 'reports' | 'settings';
+type Page = 'dashboard' | 'transactions' | 'calendar' | 'search' | 'projection' | 'simulator' | 'recurring' | 'reports' | 'import' | 'settings';
 
 function ThemeToggle() {
   const [isDark, setIsDark] = useState(() => {
@@ -120,6 +121,13 @@ function AppContent() {
             </a>
             <a
               href="#"
+              className={`nav-link ${currentPage === 'import' ? 'active' : ''}`}
+              onClick={(e) => { e.preventDefault(); setCurrentPage('import'); }}
+            >
+              {t.csvImport.title}
+            </a>
+            <a
+              href="#"
               className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
               onClick={(e) => { e.preventDefault(); setCurrentPage('settings'); }}
             >
@@ -139,6 +147,7 @@ function AppContent() {
         {currentPage === 'simulator' && <SimulatorPage />}
         {currentPage === 'recurring' && <RecurringPage />}
         {currentPage === 'reports' && <ReportsPage />}
+        {currentPage === 'import' && <ImportPage />}
         {currentPage === 'settings' && <SettingsPage />}
       </main>
     </div>

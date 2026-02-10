@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useTransactions, useDeleteTransaction } from '../hooks/useApi';
 import { TransactionForm } from '../components/TransactionForm';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { useLanguage } from '../i18n';
 import {
@@ -143,15 +143,67 @@ export function SearchPage() {
         }).format(value);
     };
 
-    // Filtra transações pela busca
+    // Helper para converter texto de mês em número (0-11)
+    const getMonthNumber = (monthStr: string): number | null => {
+        const normalized = normalizeText(monthStr).substring(0, 3);
+        const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        const index = months.indexOf(normalized);
+        if (index !== -1) return index;
+
+        // Tenta inglês
+        const monthsEn = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        return monthsEn.indexOf(normalized) !== -1 ? monthsEn.indexOf(normalized) : null;
+    };
+
+    // Filtra transações pela busca (descrição, categoria, mês)
     const filteredTransactions = useMemo(() => {
         if (!allTransactions || !searchTerm.trim()) return [];
 
-        const normalizedSearch = normalizeText(searchTerm.trim());
+        let term = searchTerm.trim();
+        let categoryQuery = '';
+        let monthQuery: number | null = null;
 
-        return allTransactions.filter((t) =>
-            normalizeText(t.description).includes(normalizedSearch)
-        ).sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate));
+        // Extrai #categoria
+        const categoryMatch = term.match(/#(?:categoria|category):\s*([^\s#]+)/i);
+        if (categoryMatch) {
+            categoryQuery = normalizeText(categoryMatch[1]);
+            term = term.replace(categoryMatch[0], '').trim();
+        }
+
+        // Extrai #mes
+        const monthMatch = term.match(/#(?:mes|month):\s*([^\s#]+)/i);
+        if (monthMatch) {
+            monthQuery = getMonthNumber(monthMatch[1]);
+            term = term.replace(monthMatch[0], '').trim();
+        }
+
+        // Extrai #ano
+        const yearMatch = term.match(/#(?:ano|year):\s*(\d{4})/i);
+        let yearQuery: number | null = null;
+        if (yearMatch) {
+            yearQuery = parseInt(yearMatch[1], 10);
+            term = term.replace(yearMatch[0], '').trim();
+        }
+
+        const normalizedSearch = normalizeText(term);
+
+        return allTransactions.filter((t) => {
+            // Filtro de texto (descrição)
+            const matchesText = !normalizedSearch || normalizeText(t.description).includes(normalizedSearch);
+
+            // Filtro de categoria
+            const matchesCategory = !categoryQuery || (t.category?.name && normalizeText(t.category.name).includes(categoryQuery));
+
+            const date = parseISO(t.effectiveDate);
+
+            // Filtro de mês
+            const matchesMonth = monthQuery === null || date.getMonth() === monthQuery;
+
+            // Filtro de ano
+            const matchesYear = yearQuery === null || date.getFullYear() === yearQuery;
+
+            return matchesText && matchesCategory && matchesMonth && matchesYear;
+        }).sort((a, b) => b.effectiveDate.localeCompare(a.effectiveDate));
     }, [allTransactions, searchTerm]);
 
     // Calcula totais
@@ -192,7 +244,7 @@ export function SearchPage() {
                     <input
                         type="text"
                         className="form-input"
-                        placeholder={t.transactions.searchPlaceholder}
+                        placeholder={`${t.transactions.searchPlaceholder} (#cat: Alimentação #mes: fev #ano: 2026)`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{

@@ -162,6 +162,29 @@ export interface Translations {
         confirmDelete: string;
     };
 
+    // CSV Import
+    csvImport: {
+        title: string;
+        description: string;
+        dragDrop: string;
+        selectFile: string;
+        processing: string;
+        aiCategorizing: string;
+        results: string;
+        saveAll: string;
+        saving: string;
+        saved: string;
+        importAnother: string;
+        invalidFile: string;
+        errorProcessing: string;
+        errorSaving: string;
+        editCategory: string;
+        date: string;
+        descriptionCol: string;
+        amount: string;
+        categoryCol: string;
+    };
+
     // Messages
     messages: {
         backupCreated: string;
@@ -326,6 +349,27 @@ export const translations: Record<Language, Translations> = {
             color: 'Cor',
             confirmDelete: 'Tem certeza que deseja excluir esta categoria?',
         },
+        csvImport: {
+            title: 'Importar CSV',
+            description: 'Importe transações de um extrato bancário CSV. A IA irá categorizar automaticamente cada transação.',
+            dragDrop: 'Arraste e solte seu arquivo CSV aqui',
+            selectFile: 'ou clique para selecionar',
+            processing: 'Processando...',
+            aiCategorizing: 'A IA está categorizando suas transações, isso pode levar alguns segundos.',
+            results: 'Resultados',
+            saveAll: 'Salvar Tudo',
+            saving: 'Salvando...',
+            saved: 'Transações importadas com sucesso!',
+            importAnother: 'Importar outro',
+            invalidFile: 'Arquivo inválido. Use um arquivo .csv ou .txt',
+            errorProcessing: 'Erro ao processar o arquivo CSV. Verifique o formato.',
+            errorSaving: 'Erro ao salvar as transações.',
+            editCategory: 'Editar categoria',
+            date: 'Data',
+            descriptionCol: 'Descrição',
+            amount: 'Valor',
+            categoryCol: 'Categoria',
+        },
         messages: {
             backupCreated: 'Backup criado',
             backupDeleted: 'Backup excluído',
@@ -486,6 +530,27 @@ export const translations: Record<Language, Translations> = {
             name: 'Name',
             color: 'Color',
             confirmDelete: 'Are you sure you want to delete this category?',
+        },
+        csvImport: {
+            title: 'Import CSV',
+            description: 'Import transactions from a bank statement CSV. AI will automatically categorize each transaction.',
+            dragDrop: 'Drag and drop your CSV file here',
+            selectFile: 'or click to select',
+            processing: 'Processing...',
+            aiCategorizing: 'AI is categorizing your transactions, this may take a few seconds.',
+            results: 'Results',
+            saveAll: 'Save All',
+            saving: 'Saving...',
+            saved: 'Transactions imported successfully!',
+            importAnother: 'Import another',
+            invalidFile: 'Invalid file. Use a .csv or .txt file',
+            errorProcessing: 'Error processing the CSV file. Check the format.',
+            errorSaving: 'Error saving transactions.',
+            editCategory: 'Edit category',
+            date: 'Date',
+            descriptionCol: 'Description',
+            amount: 'Amount',
+            categoryCol: 'Category',
         },
         messages: {
             backupCreated: 'Backup created',
