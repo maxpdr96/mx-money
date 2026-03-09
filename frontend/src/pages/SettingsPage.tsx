@@ -191,32 +191,21 @@ export function SettingsPage() {
     };
 
     return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div className="settings-page">
+            <div className="settings-page-header">
                 <h1 style={{ fontSize: '1.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Settings size={28} />
                     {t.settings.title}
                 </h1>
             </div>
 
-            {/* Message */}
             {message && (
-                <div
-                    style={{
-                        padding: '12px 16px',
-                        borderRadius: '8px',
-                        marginBottom: '1rem',
-                        background: message.type === 'success' ? 'var(--color-success-light)' : 'var(--color-danger-light)',
-                        color: message.type === 'success' ? 'var(--color-success)' : 'var(--color-danger)',
-                        fontWeight: 500,
-                    }}
-                >
+                <div className={`settings-message ${message.type}`}>
                     {message.text}
                 </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                {/* Language Section */}
+            <div className="settings-grid">
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">
@@ -229,7 +218,7 @@ export function SettingsPage() {
                         {t.settings.language.description}
                     </p>
 
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <div className="settings-inline-actions">
                         <button
                             className={`btn ${language === 'pt-BR' ? 'btn-primary' : 'btn-ghost'}`}
                             onClick={() => handleLanguageChange('pt-BR')}
@@ -245,7 +234,6 @@ export function SettingsPage() {
                     </div>
                 </div>
 
-                {/* Export/Import Section */}
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">
@@ -258,41 +246,50 @@ export function SettingsPage() {
                         {t.settings.database.description}
                     </p>
 
-                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                        <button className="btn btn-primary" onClick={handleExport}>
-                            <Download size={16} />
-                            {t.settings.database.exportDb}
-                        </button>
-                        <button className="btn btn-ghost" onClick={() => fileInputDbRef.current?.click()}>
-                            <Upload size={16} />
-                            {t.settings.database.importDb}
-                        </button>
-                        <button className="btn btn-primary" onClick={handleExportJson}>
-                            <Download size={16} />
-                            {t.settings.database.exportJson}
-                        </button>
-                        <button className="btn btn-ghost" onClick={() => fileInputJsonRef.current?.click()}>
-                            <Upload size={16} />
-                            {t.settings.database.importJson}
-                        </button>
-                        <input
-                            ref={fileInputDbRef}
-                            type="file"
-                            accept=".db"
-                            style={{ display: 'none' }}
-                            onChange={handleImportDb}
-                        />
-                        <input
-                            ref={fileInputJsonRef}
-                            type="file"
-                            accept=".json,application/json"
-                            style={{ display: 'none' }}
-                            onChange={handleImportJson}
-                        />
+                    <div className="settings-transfer-grid">
+                        <div className="settings-transfer-card">
+                            <div className="settings-transfer-title">Banco completo (.db)</div>
+                            <div className="settings-inline-actions">
+                                <button className="btn btn-primary" onClick={handleExport}>
+                                    <Download size={16} />
+                                    {t.settings.database.exportDb}
+                                </button>
+                                <button className="btn btn-ghost" onClick={() => fileInputDbRef.current?.click()}>
+                                    <Upload size={16} />
+                                    {t.settings.database.importDb}
+                                </button>
+                            </div>
+                        </div>
+                        <div className="settings-transfer-card">
+                            <div className="settings-transfer-title">Dados (.json)</div>
+                            <div className="settings-inline-actions">
+                                <button className="btn btn-primary" onClick={handleExportJson}>
+                                    <Download size={16} />
+                                    {t.settings.database.exportJson}
+                                </button>
+                                <button className="btn btn-ghost" onClick={() => fileInputJsonRef.current?.click()}>
+                                    <Upload size={16} />
+                                    {t.settings.database.importJson}
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                    <input
+                        ref={fileInputDbRef}
+                        type="file"
+                        accept=".db"
+                        style={{ display: 'none' }}
+                        onChange={handleImportDb}
+                    />
+                    <input
+                        ref={fileInputJsonRef}
+                        type="file"
+                        accept=".json,application/json"
+                        style={{ display: 'none' }}
+                        onChange={handleImportJson}
+                    />
                 </div>
 
-                {/* Auto Backup Settings */}
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">
@@ -304,8 +301,8 @@ export function SettingsPage() {
                     {loading ? (
                         <div className="loading"><div className="spinner"></div></div>
                     ) : settings && (
-                        <>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <div className="settings-stack">
+                            <div className="settings-row-between">
                                 <div>
                                     <div style={{ fontWeight: 500 }}>{t.settings.autoBackup.daily}</div>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -321,13 +318,12 @@ export function SettingsPage() {
                                 </button>
                             </div>
 
-                            {/* Interval Selector */}
-                            <div style={{ marginBottom: '1rem' }}>
+                            <div>
                                 <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>{t.settings.autoBackup.interval}</div>
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
                                     {t.settings.autoBackup.intervalDescription}
                                 </div>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <div className="settings-inline-actions">
                                     <button
                                         className={`btn ${settings.backupIntervalHours === 1 ? 'btn-primary' : 'btn-ghost'}`}
                                         onClick={() => handleIntervalChange(1)}
@@ -349,15 +345,14 @@ export function SettingsPage() {
                                 </div>
                             </div>
 
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            <div className="settings-muted-row">
                                 <Shield size={12} style={{ display: 'inline', marginRight: '4px' }} />
                                 {settings.maxBackups} {t.settings.autoBackup.maxBackups}
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
 
-                {/* Backup Directory */}
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">
@@ -375,7 +370,7 @@ export function SettingsPage() {
                             </p>
 
                             {editingDirectory ? (
-                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                <div className="settings-inline-actions">
                                     <input
                                         type="text"
                                         className="form-input"
@@ -396,15 +391,8 @@ export function SettingsPage() {
                                     </button>
                                 </div>
                             ) : (
-                                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                    <code style={{
-                                        flex: 1,
-                                        padding: '12px',
-                                        background: 'var(--surface-secondary)',
-                                        borderRadius: '8px',
-                                        fontSize: '0.875rem',
-                                        wordBreak: 'break-all'
-                                    }}>
+                                <div className="settings-inline-actions">
+                                    <code className="settings-code-path">
                                         {settings.backupDirectory}
                                     </code>
                                     <button className="btn btn-ghost" onClick={() => setEditingDirectory(true)}>
@@ -417,14 +405,13 @@ export function SettingsPage() {
                 </div>
             </div>
 
-            {/* Backups List */}
-            <div className="card" style={{ marginTop: '1.5rem' }}>
+            <div className="card settings-backups-card">
                 <div className="card-header">
                     <h3 className="card-title">
                         <Save size={18} style={{ marginRight: '8px' }} />
                         {t.settings.backups.title} ({backups.length}/5)
                     </h3>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div className="settings-inline-actions">
                         <button className="btn btn-icon btn-ghost" onClick={loadData} title="Refresh">
                             <RefreshCw size={16} />
                         </button>
@@ -445,21 +432,21 @@ export function SettingsPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="transaction-list">
+                    <div className="settings-backup-list">
                         {backups.map((backup) => (
-                            <div key={backup.name} className="transaction-item">
-                                <div className="transaction-icon" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>
+                            <div key={backup.name} className="settings-backup-row">
+                                <div className="settings-backup-icon">
                                     <HardDrive size={20} />
                                 </div>
-                                <div className="transaction-info">
-                                    <div className="transaction-description">{backup.name}</div>
-                                    <div className="transaction-meta">
+                                <div className="settings-backup-info">
+                                    <div className="settings-backup-name">{backup.name}</div>
+                                    <div className="settings-backup-meta">
                                         <span>{formatDate(backup.created)}</span>
                                         <span>•</span>
                                         <span>{formatBytes(backup.size)}</span>
                                     </div>
                                 </div>
-                                <div className="transaction-actions" style={{ opacity: 1 }}>
+                                <div className="settings-inline-actions">
                                     <button
                                         className="btn btn-ghost"
                                         onClick={() => handleRestoreBackup(backup.name)}

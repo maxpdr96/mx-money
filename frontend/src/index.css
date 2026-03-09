@@ -817,6 +817,161 @@ body {
 }
 
 /* ================================
+   Settings Page
+================================ */
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.settings-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.settings-message.success {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.settings-message.error {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.settings-transfer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.settings-transfer-card {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: var(--bg-primary);
+}
+
+.settings-transfer-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.settings-muted-row {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.settings-code-path {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+.settings-backups-card {
+  margin-top: 0.25rem;
+}
+
+.settings-backup-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-backup-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-backup-row:last-child {
+  border-bottom: none;
+}
+
+.settings-backup-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.settings-backup-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-backup-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-backup-meta {
+  display: flex;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-top: 0.1rem;
+}
+
+@media (max-width: 980px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-transfer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ================================
    Calendar Styles
 ================================ */
 .calendar-page {
