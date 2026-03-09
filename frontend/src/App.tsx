@@ -11,7 +11,22 @@ import { ImportPage } from './pages/ImportPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { LanguageProvider, useLanguage } from './i18n';
-import { Wallet, Sun, Moon } from 'lucide-react';
+import {
+  Wallet,
+  Sun,
+  Moon,
+  LayoutDashboard,
+  ReceiptText,
+  CalendarDays,
+  Search,
+  LineChart,
+  Calculator,
+  Repeat,
+  Brain,
+  FileSpreadsheet,
+  Settings
+} from 'lucide-react';
+import { APP_VERSION } from './version';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -51,6 +66,18 @@ function ThemeToggle() {
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const { t } = useLanguage();
+  const navItems = [
+    { page: 'dashboard' as const, label: t.nav.dashboard, icon: LayoutDashboard, hint: 'Visão geral dos saldos' },
+    { page: 'transactions' as const, label: t.nav.transactions, icon: ReceiptText, hint: 'Lançamentos e edição' },
+    { page: 'calendar' as const, label: t.nav.calendar, icon: CalendarDays, hint: 'Agenda financeira' },
+    { page: 'search' as const, label: t.nav.search, icon: Search, hint: 'Busca de transações' },
+    { page: 'projection' as const, label: t.nav.projection, icon: LineChart, hint: 'Projeções futuras' },
+    { page: 'simulator' as const, label: t.nav.simulator, icon: Calculator, hint: 'Simulações rápidas' },
+    { page: 'recurring' as const, label: t.nav.recurring, icon: Repeat, hint: 'Lançamentos recorrentes' },
+    { page: 'reports' as const, label: t.reports.title, icon: Brain, hint: 'Análises com IA' },
+    { page: 'import' as const, label: t.csvImport.title, icon: FileSpreadsheet, hint: 'Importação de CSV' },
+    { page: 'settings' as const, label: t.nav.settings, icon: Settings, hint: 'Preferências do app' },
+  ];
 
   return (
     <div className="app">
@@ -63,77 +90,29 @@ function AppContent() {
             MX Money
           </a>
           <nav className="nav">
-            <a
-              href="#"
-              className={`nav-link ${currentPage === 'dashboard' ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setCurrentPage('dashboard'); }}
-            >
-              {t.nav.dashboard}
-            </a>
-            <a
-              href="#"
-              className={`nav-link ${currentPage === 'transactions' ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setCurrentPage('transactions'); }}
-            >
-              {t.nav.transactions}
-            </a>
-            <a
-              href="#"
-              className={`nav-link ${currentPage === 'calendar' ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setCurrentPage('calendar'); }}
-            >
-              {t.nav.calendar}
-            </a>
-            <a
-              href="#"
-              className={`nav-link ${currentPage === 'search' ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setCurrentPage('search'); }}
-            >
-              {t.nav.search}
-            </a>
-            <a
-              href="#"
-              className={`nav-link ${currentPage === 'projection' ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setCurrentPage('projection'); }}
-            >
-              {t.nav.projection}
-            </a>
-            <a
-              href="#"
-              className={`nav-link ${currentPage === 'simulator' ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setCurrentPage('simulator'); }}
-            >
-              {t.nav.simulator}
-            </a>
-            <a
-              href="#"
-              className={`nav-link ${currentPage === 'recurring' ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setCurrentPage('recurring'); }}
-            >
-              {t.nav.recurring}
-            </a>
-            <a
-              href="#"
-              className={`nav-link ${currentPage === 'reports' ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setCurrentPage('reports'); }}
-            >
-              {t.reports.title}
-            </a>
-            <a
-              href="#"
-              className={`nav-link ${currentPage === 'import' ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setCurrentPage('import'); }}
-            >
-              {t.csvImport.title}
-            </a>
-            <a
-              href="#"
-              className={`nav-link ${currentPage === 'settings' ? 'active' : ''}`}
-              onClick={(e) => { e.preventDefault(); setCurrentPage('settings'); }}
-            >
-              {t.nav.settings}
-            </a>
-            <ThemeToggle />
+            <div className="nav-links">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <a
+                    key={item.page}
+                    href="#"
+                    className={`nav-link ${currentPage === item.page ? 'active' : ''}`}
+                    title={item.hint}
+                    onClick={(e) => { e.preventDefault(); setCurrentPage(item.page); }}
+                  >
+                    <Icon size={15} />
+                    <span className="nav-link-text">{item.label}</span>
+                  </a>
+                );
+              })}
+            </div>
+            <div className="nav-utils">
+              <span className="app-version-badge" title="Frontend version">
+                v{APP_VERSION}
+              </span>
+              <ThemeToggle />
+            </div>
           </nav>
         </div>
       </header>
@@ -165,6 +144,4 @@ function App() {
 }
 
 export default App;
-
-
 

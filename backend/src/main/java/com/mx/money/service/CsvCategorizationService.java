@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Serviço de categorização de transações CSV usando Spring AI + Ollama.
@@ -27,14 +26,17 @@ public class CsvCategorizationService {
 
     private final ChatClient.Builder chatClientBuilder;
     private final TransactionRepository transactionRepository;
+    private final CategorizationRuleService categorizationRuleService;
     private final String categoriesKnowledge;
 
     public CsvCategorizationService(
             ChatClient.Builder chatClientBuilder,
             TransactionRepository transactionRepository,
+            CategorizationRuleService categorizationRuleService,
             @Value("classpath:categories.md") Resource categoriesResource) throws IOException {
         this.chatClientBuilder = chatClientBuilder;
         this.transactionRepository = transactionRepository;
+        this.categorizationRuleService = categorizationRuleService;
         this.categoriesKnowledge = categoriesResource.getContentAsString(StandardCharsets.UTF_8);
         log.info("Categories knowledge base loaded ({} chars)", categoriesKnowledge.length());
     }
@@ -48,7 +50,34 @@ public class CsvCategorizationService {
             return List.of();
         }
 
-        log.info("Categorizing {} transactions with AI...", items.size());
+        log.info("Categorizing {} transactions with rules + AI...", items.size());
+
+        List<CsvImportResponse> results = new ArrayList<>();
+        List<CsvImportRequest> itemsForAi = new ArrayList<>();
+        List<Integer> aiIndexes = new ArrayList<>();
+
+        for (int i = 0; i < items.size(); i++) {
+            CsvImportRequest item = items.get(i);
+            String matchedCategory = categorizationRuleService.findCategoryByDescription(item.getDescription())
+                    .orElse(null);
+
+            if (matchedCategory != null) {
+                results.add(new CsvImportResponse(
+                        item.getDate(),
+                        item.getDescription(),
+                        item.getAmount(),
+                        matchedCategory));
+            } else {
+                results.add(null);
+                itemsForAi.add(item);
+                aiIndexes.add(i);
+            }
+        }
+
+        if (itemsForAi.isEmpty()) {
+            log.info("All {} transactions categorized by rules. AI call skipped.", items.size());
+            return results;
+        }
 
         // Busca histórico recente para aprendizado (últimos 6 meses)
         LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
@@ -59,8 +88,8 @@ public class CsvCategorizationService {
 
         // Monta a lista de descrições numeradas para classificar
         StringBuilder descriptionsToClassify = new StringBuilder();
-        for (int i = 0; i < items.size(); i++) {
-            descriptionsToClassify.append(i + 1).append(". ").append(items.get(i).getDescription()).append("\n");
+        for (int i = 0; i < itemsForAi.size(); i++) {
+            descriptionsToClassify.append(i + 1).append(". ").append(itemsForAi.get(i).getDescription()).append("\n");
         }
 
         String prompt = buildPrompt(descriptionsToClassify.toString(), userExamples);
@@ -74,17 +103,23 @@ public class CsvCategorizationService {
                     .content();
 
             log.debug("LLM raw response:\n{}", response);
-            return parseResponse(response, items);
+            List<CsvImportResponse> aiResponses = parseResponse(response, itemsForAi);
+            for (int i = 0; i < aiResponses.size(); i++) {
+                results.set(aiIndexes.get(i), aiResponses.get(i));
+            }
+            return results;
         } catch (Exception e) {
             log.error("Error calling Ollama for categorization", e);
             // Fallback: retorna todos como "Outros" em caso de erro
-            return items.stream()
-                    .map(item -> new CsvImportResponse(
-                            item.getDate(),
-                            item.getDescription(),
-                            item.getAmount(),
-                            "Outros"))
-                    .collect(Collectors.toList());
+            for (int index : aiIndexes) {
+                CsvImportRequest item = items.get(index);
+                results.set(index, new CsvImportResponse(
+                        item.getDate(),
+                        item.getDescription(),
+                        item.getAmount(),
+                        "Outros"));
+            }
+            return results;
         }
     }
 
