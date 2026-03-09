@@ -9,12 +9,14 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class BackupJsonTransaction {
+    private Long id;
     private String description;
     private BigDecimal amount;
     private LocalDate effectiveDate;
@@ -24,4 +26,6 @@ public class BackupJsonTransaction {
     private LocalDate lastGeneratedDate;
     private LocalDate endDate;
     private Long parentRecurringId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

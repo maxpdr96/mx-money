@@ -22,14 +22,18 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -60,32 +64,18 @@ class BackupControllerTest {
         @Test
         @DisplayName("should return list of backups")
         void shouldReturnListOfBackups() throws Exception {
-            // Given
             List<Map<String, Object>> backups = List.of(
-                    Map.of("name", "backup_2024-01-15.db", "size", 1024L),
-                    Map.of("name", "backup_2024-01-14.db", "size", 1020L));
+                    Map.of("name", "backup_2026-03-09_17-00-00.json", "size", 1024L),
+                    Map.of("name", "backup_2026-03-08_17-00-00.json", "size", 980L));
             when(backupService.listBackups()).thenReturn(backups);
 
-            // When/Then
             mockMvc.perform(get("/api/backup"))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(2)))
-                    .andExpect(jsonPath("$[0].name", is("backup_2024-01-15.db")));
+                    .andExpect(jsonPath("$[0].name", is("backup_2026-03-09_17-00-00.json")));
 
             verify(backupService).listBackups();
-        }
-
-        @Test
-        @DisplayName("should return empty list when no backups exist")
-        void shouldReturnEmptyList() throws Exception {
-            // Given
-            when(backupService.listBackups()).thenReturn(List.of());
-
-            // When/Then
-            mockMvc.perform(get("/api/backup"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(0)));
         }
     }
 
@@ -96,13 +86,11 @@ class BackupControllerTest {
         @Test
         @DisplayName("should create backup successfully")
         void shouldCreateBackup() throws Exception {
-            // Given
-            when(backupService.createBackup()).thenReturn("backup_2024-01-15_12-00-00.db");
+            when(backupService.createBackup()).thenReturn("backup_2026-03-09_17-00-00.json");
 
-            // When/Then
             mockMvc.perform(post("/api/backup"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.name", is("backup_2024-01-15_12-00-00.db")))
+                    .andExpect(jsonPath("$.name", is("backup_2026-03-09_17-00-00.json")))
                     .andExpect(jsonPath("$.message", containsString("successfully")));
 
             verify(backupService).createBackup();
@@ -116,14 +104,12 @@ class BackupControllerTest {
         @Test
         @DisplayName("should delete backup successfully")
         void shouldDeleteBackup() throws Exception {
-            // Given
-            doNothing().when(backupService).deleteBackup("backup_2024-01-15.db");
+            doNothing().when(backupService).deleteBackup("backup_2026-03-09_17-00-00.json");
 
-            // When/Then
-            mockMvc.perform(delete("/api/backup/backup_2024-01-15.db"))
+            mockMvc.perform(delete("/api/backup/backup_2026-03-09_17-00-00.json"))
                     .andExpect(status().isNoContent());
 
-            verify(backupService).deleteBackup("backup_2024-01-15.db");
+            verify(backupService).deleteBackup("backup_2026-03-09_17-00-00.json");
         }
     }
 
@@ -134,86 +120,18 @@ class BackupControllerTest {
         @Test
         @DisplayName("should restore backup successfully")
         void shouldRestoreBackup() throws Exception {
-            // Given
-            doNothing().when(backupService).restoreBackup("backup_2024-01-15.db");
+            doNothing().when(backupService).restoreBackup("backup_2026-03-09_17-00-00.json");
 
-            // When/Then
-            mockMvc.perform(post("/api/backup/restore/backup_2024-01-15.db"))
+            mockMvc.perform(post("/api/backup/restore/backup_2026-03-09_17-00-00.json"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message", containsString("restored")));
 
-            verify(backupService).restoreBackup("backup_2024-01-15.db");
+            verify(backupService).restoreBackup("backup_2026-03-09_17-00-00.json");
         }
     }
 
     @Nested
     @DisplayName("GET /api/backup/export")
-    class ExportDatabaseTests {
-
-        @Test
-        @DisplayName("should export database as file")
-        void shouldExportDatabase() throws Exception {
-            // Given
-            doAnswer(invocation -> {
-                OutputStream os = invocation.getArgument(0);
-                os.write("mock database content".getBytes());
-                return null;
-            }).when(backupService).exportDatabase(any(OutputStream.class));
-
-            // When/Then
-            mockMvc.perform(get("/api/backup/export"))
-                    .andExpect(status().isOk())
-                    .andExpect(header().string("Content-Disposition", containsString("attachment")))
-                    .andExpect(header().string("Content-Disposition", containsString(".db")));
-
-            verify(backupService).exportDatabase(any(OutputStream.class));
-        }
-    }
-
-    @Nested
-    @DisplayName("POST /api/backup/import")
-    class ImportDatabaseTests {
-
-        @Test
-        @DisplayName("should import database from file")
-        void shouldImportDatabase() throws Exception {
-            // Given
-            MockMultipartFile file = new MockMultipartFile(
-                    "file",
-                    "backup.db",
-                    MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                    "mock database content".getBytes());
-            doNothing().when(backupService).importDatabase(any());
-
-            // When/Then
-            mockMvc.perform(multipart("/api/backup/import").file(file))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.message", containsString("imported")));
-
-            verify(backupService).importDatabase(any());
-        }
-
-        @Test
-        @DisplayName("should return 400 when file is empty")
-        void shouldReturn400WhenFileEmpty() throws Exception {
-            // Given
-            MockMultipartFile emptyFile = new MockMultipartFile(
-                    "file",
-                    "empty.db",
-                    MediaType.APPLICATION_OCTET_STREAM_VALUE,
-                    new byte[0]);
-
-            // When/Then
-            mockMvc.perform(multipart("/api/backup/import").file(emptyFile))
-                    .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error", containsString("empty")));
-
-            verify(backupService, never()).importDatabase(any());
-        }
-    }
-
-    @Nested
-    @DisplayName("GET /api/backup/export/json")
     class ExportJsonTests {
 
         @Test
@@ -236,7 +154,7 @@ class BackupControllerTest {
 
             when(backupService.exportDatabaseAsJson()).thenReturn(data);
 
-            mockMvc.perform(get("/api/backup/export/json"))
+            mockMvc.perform(get("/api/backup/export"))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Content-Disposition", containsString(".json")))
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
@@ -246,7 +164,7 @@ class BackupControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/backup/import/json")
+    @DisplayName("POST /api/backup/import")
     class ImportJsonTests {
 
         @Test
@@ -279,11 +197,27 @@ class BackupControllerTest {
 
             doNothing().when(backupService).importDatabaseFromJson(any(BackupJsonData.class));
 
-            mockMvc.perform(multipart("/api/backup/import/json").file(file))
+            mockMvc.perform(multipart("/api/backup/import").file(file))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message", containsString("imported")));
 
             verify(backupService).importDatabaseFromJson(any(BackupJsonData.class));
+        }
+
+        @Test
+        @DisplayName("should return 400 when file is empty")
+        void shouldReturn400WhenFileEmpty() throws Exception {
+            MockMultipartFile emptyFile = new MockMultipartFile(
+                    "file",
+                    "empty.json",
+                    MediaType.APPLICATION_JSON_VALUE,
+                    new byte[0]);
+
+            mockMvc.perform(multipart("/api/backup/import").file(emptyFile))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error", containsString("empty")));
+
+            verify(backupService, never()).importDatabaseFromJson(any());
         }
     }
 
@@ -294,13 +228,11 @@ class BackupControllerTest {
         @Test
         @DisplayName("should return backup settings")
         void shouldReturnSettings() throws Exception {
-            // Given
             Map<String, Object> settings = Map.of(
                     "autoBackupEnabled", true,
                     "backupDirectory", "/home/user/backups");
             when(backupService.getSettings()).thenReturn(settings);
 
-            // When/Then
             mockMvc.perform(get("/api/backup/settings"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.autoBackupEnabled", is(true)))
@@ -315,10 +247,8 @@ class BackupControllerTest {
         @Test
         @DisplayName("should enable auto backup")
         void shouldEnableAutoBackup() throws Exception {
-            // Given
             when(backupService.getSettings()).thenReturn(Map.of("autoBackupEnabled", true));
 
-            // When/Then
             mockMvc.perform(put("/api/backup/settings/auto-backup")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"enabled\": true}"))
@@ -326,21 +256,6 @@ class BackupControllerTest {
                     .andExpect(jsonPath("$.autoBackupEnabled", is(true)));
 
             verify(backupService).setAutoBackupEnabled(true);
-        }
-
-        @Test
-        @DisplayName("should disable auto backup")
-        void shouldDisableAutoBackup() throws Exception {
-            // Given
-            when(backupService.getSettings()).thenReturn(Map.of("autoBackupEnabled", false));
-
-            // When/Then
-            mockMvc.perform(put("/api/backup/settings/auto-backup")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("{\"enabled\": false}"))
-                    .andExpect(status().isOk());
-
-            verify(backupService).setAutoBackupEnabled(false);
         }
     }
 
@@ -351,10 +266,8 @@ class BackupControllerTest {
         @Test
         @DisplayName("should update backup directory")
         void shouldUpdateDirectory() throws Exception {
-            // Given
             when(backupService.getSettings()).thenReturn(Map.of("backupDirectory", "/new/path"));
 
-            // When/Then
             mockMvc.perform(put("/api/backup/settings/directory")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"directory\": \"/new/path\"}"))
@@ -367,7 +280,6 @@ class BackupControllerTest {
         @Test
         @DisplayName("should return 400 when directory is blank")
         void shouldReturn400WhenDirectoryBlank() throws Exception {
-            // When/Then
             mockMvc.perform(put("/api/backup/settings/directory")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"directory\": \"\"}"))

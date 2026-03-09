@@ -33,7 +33,6 @@ export function SettingsPage() {
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [newDirectory, setNewDirectory] = useState('');
     const [editingDirectory, setEditingDirectory] = useState(false);
-    const fileInputDbRef = useRef<HTMLInputElement>(null);
     const fileInputJsonRef = useRef<HTMLInputElement>(null);
 
     const dateLocale = language === 'pt-BR' ? ptBR : enUS;
@@ -102,31 +101,8 @@ export function SettingsPage() {
         }
     };
 
-    const handleExport = () => {
-        window.location.href = backupApi.exportDatabase();
-    };
-
     const handleExportJson = () => {
-        window.location.href = backupApi.exportDatabaseJson();
-    };
-
-    const handleImportDb = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        if (!confirm(t.settings.backups.confirmRestore.replace('$1', file.name))) {
-            e.target.value = '';
-            return;
-        }
-
-        try {
-            await backupApi.importDatabase(file);
-            showMessage('success', t.messages.databaseImported);
-            loadData();
-        } catch {
-            showMessage('error', t.messages.errorSaving);
-        }
-        e.target.value = '';
+        window.location.href = backupApi.exportDataJson();
     };
 
     const handleImportJson = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,7 +115,7 @@ export function SettingsPage() {
         }
 
         try {
-            await backupApi.importDatabaseJson(file);
+            await backupApi.importDataJson(file);
             showMessage('success', t.messages.databaseImported);
             loadData();
         } catch {
@@ -248,39 +224,19 @@ export function SettingsPage() {
 
                     <div className="settings-transfer-grid">
                         <div className="settings-transfer-card">
-                            <div className="settings-transfer-title">Banco completo (.db)</div>
-                            <div className="settings-inline-actions">
-                                <button className="btn btn-primary" onClick={handleExport}>
-                                    <Download size={16} />
-                                    {t.settings.database.exportDb}
-                                </button>
-                                <button className="btn btn-ghost" onClick={() => fileInputDbRef.current?.click()}>
-                                    <Upload size={16} />
-                                    {t.settings.database.importDb}
-                                </button>
-                            </div>
-                        </div>
-                        <div className="settings-transfer-card">
                             <div className="settings-transfer-title">Dados (.json)</div>
                             <div className="settings-inline-actions">
                                 <button className="btn btn-primary" onClick={handleExportJson}>
                                     <Download size={16} />
-                                    {t.settings.database.exportJson}
+                                    {t.settings.database.export}
                                 </button>
                                 <button className="btn btn-ghost" onClick={() => fileInputJsonRef.current?.click()}>
                                     <Upload size={16} />
-                                    {t.settings.database.importJson}
+                                    {t.settings.database.import}
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <input
-                        ref={fileInputDbRef}
-                        type="file"
-                        accept=".db"
-                        style={{ display: 'none' }}
-                        onChange={handleImportDb}
-                    />
                     <input
                         ref={fileInputJsonRef}
                         type="file"

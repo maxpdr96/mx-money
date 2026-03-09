@@ -17,4 +17,5 @@ public class BackupJsonData {
     private LocalDateTime exportedAt;
     private List<BackupJsonCategory> categories;
     private List<BackupJsonTransaction> transactions;
+    private List<BackupJsonCategorizationRule> categorizationRules;
 }

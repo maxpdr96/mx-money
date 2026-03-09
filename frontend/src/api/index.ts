@@ -146,27 +146,14 @@ export const backupApi = {
         return data;
     },
 
-    exportDatabase: (): string => {
+    exportDataJson: (): string => {
         return '/api/backup/export';
     },
 
-    exportDatabaseJson: (): string => {
-        return '/api/backup/export/json';
-    },
-
-    importDatabase: async (file: File): Promise<{ message: string }> => {
+    importDataJson: async (file: File): Promise<{ message: string }> => {
         const formData = new FormData();
         formData.append('file', file);
         const { data } = await api.post<{ message: string }>('/backup/import', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return data;
-    },
-
-    importDatabaseJson: async (file: File): Promise<{ message: string }> => {
-        const formData = new FormData();
-        formData.append('file', file);
-        const { data } = await api.post<{ message: string }>('/backup/import/json', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return data;

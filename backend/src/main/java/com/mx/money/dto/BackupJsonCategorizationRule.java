@@ -11,10 +11,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BackupJsonCategory {
-    private String name;
-    private String color;
-    private String icon;
+public class BackupJsonCategorizationRule {
+    private String keyword;
+    private String categoryName;
+    private Integer priority;
+    private Boolean enabled;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -1,24 +1,27 @@
 package com.mx.money.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mx.money.dto.BackupJsonCategory;
+import com.mx.money.dto.BackupJsonCategorizationRule;
 import com.mx.money.dto.BackupJsonData;
 import com.mx.money.dto.BackupJsonTransaction;
 import com.mx.money.entity.Category;
+import com.mx.money.entity.CategorizationRule;
 import com.mx.money.entity.RecurrenceType;
 import com.mx.money.entity.Transaction;
+import com.mx.money.repository.CategorizationRuleRepository;
 import com.mx.money.repository.CategoryRepository;
 import com.mx.money.repository.TransactionRepository;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -34,19 +37,24 @@ public class BackupService {
     private static final Path SETTINGS_FILE = Paths.get("./data/backup-settings.properties");
     private static final Path DEFAULT_BACKUP_DIR = Paths.get("./data/backups");
 
-    @Value("${spring.datasource.url}")
-    private String datasourceUrl;
-
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
+    private final CategorizationRuleRepository categorizationRuleRepository;
+    private final ObjectMapper objectMapper;
 
     private Path backupDir;
     private boolean autoBackupEnabled = true;
     private int backupIntervalHours = 24;
 
-    public BackupService(CategoryRepository categoryRepository, TransactionRepository transactionRepository) {
+    public BackupService(
+            CategoryRepository categoryRepository,
+            TransactionRepository transactionRepository,
+            CategorizationRuleRepository categorizationRuleRepository,
+            ObjectMapper objectMapper) {
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
+        this.categorizationRuleRepository = categorizationRuleRepository;
+        this.objectMapper = objectMapper;
         loadSettings();
         try {
             Files.createDirectories(backupDir);
@@ -55,9 +63,6 @@ public class BackupService {
         }
     }
 
-    /**
-     * Loads settings from file or uses defaults
-     */
     private void loadSettings() {
         this.backupDir = DEFAULT_BACKUP_DIR;
         this.autoBackupEnabled = true;
@@ -91,9 +96,6 @@ public class BackupService {
         }
     }
 
-    /**
-     * Saves settings to file
-     */
     private void saveSettings() {
         try {
             Files.createDirectories(SETTINGS_FILE.getParent());
@@ -108,41 +110,22 @@ public class BackupService {
     }
 
     /**
-     * Returns the path to the SQLite database file
-     */
-    private Path getDatabasePath() {
-        // jdbc:sqlite:./data/mxmoney.db -> ./data/mxmoney.db
-        String path = datasourceUrl.replace("jdbc:sqlite:", "");
-        return Paths.get(path);
-    }
-
-    /**
-     * Creates a backup of the database
+     * Creates a JSON backup file with all categories + transactions.
      */
     public String createBackup() throws IOException {
-        Path dbPath = getDatabasePath();
-        if (!Files.exists(dbPath)) {
-            throw new IOException("Database file not found: " + dbPath);
-        }
-
-        // Ensure backup directory exists
         Files.createDirectories(backupDir);
 
-        String backupName = "backup_" + LocalDateTime.now().format(BACKUP_DATE_FORMAT) + ".db";
+        String backupName = "backup_" + LocalDateTime.now().format(BACKUP_DATE_FORMAT) + ".json";
         Path backupPath = backupDir.resolve(backupName);
 
-        Files.copy(dbPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
-        log.info("Backup created: {}", backupName);
+        BackupJsonData data = exportDatabaseAsJson();
+        objectMapper.writeValue(backupPath.toFile(), data);
+        log.info("JSON backup created: {}", backupName);
 
-        // Clean old backups
         cleanOldBackups();
-
         return backupName;
     }
 
-    /**
-     * Lists all existing backups
-     */
     public List<Map<String, Object>> listBackups() throws IOException {
         if (!Files.exists(backupDir)) {
             return Collections.emptyList();
@@ -150,7 +133,7 @@ public class BackupService {
 
         try (Stream<Path> paths = Files.list(backupDir)) {
             return paths
-                    .filter(p -> p.getFileName().toString().endsWith(".db"))
+                    .filter(p -> p.getFileName().toString().endsWith(".json"))
                     .sorted(Comparator.comparing(Path::getFileName).reversed())
                     .map(p -> {
                         Map<String, Object> backup = new HashMap<>();
@@ -168,9 +151,6 @@ public class BackupService {
         }
     }
 
-    /**
-     * Deletes a specific backup
-     */
     public void deleteBackup(String backupName) throws IOException {
         Path backupPath = backupDir.resolve(backupName);
         if (!Files.exists(backupPath)) {
@@ -180,26 +160,6 @@ public class BackupService {
         log.info("Backup deleted: {}", backupName);
     }
 
-    /**
-     * Exports the database to an output stream
-     */
-    public void exportDatabase(OutputStream outputStream) throws IOException {
-        Path dbPath = getDatabasePath();
-        Files.copy(dbPath, outputStream);
-    }
-
-    /**
-     * Imports database from an input stream
-     */
-    public void importDatabase(InputStream inputStream) throws IOException {
-        // First, create a backup before import
-        createBackup();
-
-        Path dbPath = getDatabasePath();
-        Files.copy(inputStream, dbPath, StandardCopyOption.REPLACE_EXISTING);
-        log.info("Database imported successfully");
-    }
-
     public BackupJsonData exportDatabaseAsJson() {
         List<BackupJsonCategory> categories = categoryRepository.findAll().stream()
                 .sorted(Comparator.comparing(Category::getName, String.CASE_INSENSITIVE_ORDER))
@@ -207,12 +167,15 @@ public class BackupService {
                         .name(category.getName())
                         .color(category.getColor())
                         .icon(category.getIcon())
+                        .createdAt(category.getCreatedAt())
+                        .updatedAt(category.getUpdatedAt())
                         .build())
                 .toList();
 
         List<BackupJsonTransaction> transactions = transactionRepository.findAll().stream()
                 .sorted(Comparator.comparing(Transaction::getEffectiveDate).thenComparing(Transaction::getId))
                 .map(transaction -> BackupJsonTransaction.builder()
+                        .id(transaction.getId())
                         .description(transaction.getDescription())
                         .amount(transaction.getAmount())
                         .effectiveDate(transaction.getEffectiveDate())
@@ -222,6 +185,20 @@ public class BackupService {
                         .lastGeneratedDate(transaction.getLastGeneratedDate())
                         .endDate(transaction.getEndDate())
                         .parentRecurringId(transaction.getParentRecurringId())
+                        .createdAt(transaction.getCreatedAt())
+                        .updatedAt(transaction.getUpdatedAt())
+                        .build())
+                .toList();
+
+        List<BackupJsonCategorizationRule> categorizationRules = categorizationRuleRepository.findAll().stream()
+                .sorted(Comparator.comparing(CategorizationRule::getPriority).thenComparing(CategorizationRule::getId))
+                .map(rule -> BackupJsonCategorizationRule.builder()
+                        .keyword(rule.getKeyword())
+                        .categoryName(rule.getCategoryName())
+                        .priority(rule.getPriority())
+                        .enabled(rule.getEnabled())
+                        .createdAt(rule.getCreatedAt())
+                        .updatedAt(rule.getUpdatedAt())
                         .build())
                 .toList();
 
@@ -230,21 +207,54 @@ public class BackupService {
                 .exportedAt(LocalDateTime.now())
                 .categories(categories)
                 .transactions(transactions)
+                .categorizationRules(categorizationRules)
                 .build();
     }
 
     @Transactional
     public void importDatabaseFromJson(BackupJsonData data) throws IOException {
+        doImportFromJson(data, true);
+    }
+
+    /**
+     * Restores data from a JSON backup file.
+     */
+    @Transactional
+    public void restoreBackup(String backupName) throws IOException {
+        Path backupPath = backupDir.resolve(backupName);
+        if (!Files.exists(backupPath)) {
+            throw new IOException("Backup not found: " + backupName);
+        }
+
+        // Safety backup before restore
+        createBackup();
+
+        BackupJsonData backupData;
+        try {
+            backupData = objectMapper.readValue(backupPath.toFile(), BackupJsonData.class);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Invalid backup JSON: " + backupName);
+        }
+
+        doImportFromJson(backupData, false);
+        log.info("Database restored from JSON backup: {}", backupName);
+    }
+
+    private void doImportFromJson(BackupJsonData data, boolean createBackupBeforeImport) throws IOException {
         if (data == null) {
             throw new IllegalArgumentException("JSON de importacao invalido.");
         }
 
         List<BackupJsonCategory> categories = Optional.ofNullable(data.getCategories()).orElse(List.of());
         List<BackupJsonTransaction> transactions = Optional.ofNullable(data.getTransactions()).orElse(List.of());
+        List<BackupJsonCategorizationRule> categorizationRules = Optional.ofNullable(data.getCategorizationRules()).orElse(List.of());
 
-        createBackup();
+        if (createBackupBeforeImport) {
+            createBackup();
+        }
 
         transactionRepository.deleteAllInBatch();
+        categorizationRuleRepository.deleteAllInBatch();
         categoryRepository.deleteAllInBatch();
 
         Map<String, Category> categoriesByName = new HashMap<>();
@@ -259,10 +269,15 @@ public class BackupService {
                     .name(name)
                     .color(categoryJson.getColor())
                     .icon(categoryJson.getIcon())
+                    .createdAt(categoryJson.getCreatedAt())
+                    .updatedAt(categoryJson.getUpdatedAt())
                     .build();
             Category saved = categoryRepository.save(category);
             categoriesByName.put(saved.getName().toLowerCase(Locale.ROOT), saved);
         }
+
+        Map<Long, Long> transactionIdMap = new HashMap<>();
+        List<Map.Entry<Long, Long>> parentLinks = new ArrayList<>();
 
         for (BackupJsonTransaction transactionJson : transactions) {
             if (transactionJson.getDescription() == null || transactionJson.getDescription().isBlank()) {
@@ -289,13 +304,49 @@ public class BackupService {
                     .category(category)
                     .lastGeneratedDate(transactionJson.getLastGeneratedDate())
                     .endDate(transactionJson.getEndDate())
-                    .parentRecurringId(transactionJson.getParentRecurringId())
+                    .parentRecurringId(null)
+                    .createdAt(transactionJson.getCreatedAt())
+                    .updatedAt(transactionJson.getUpdatedAt())
                     .build();
 
-            transactionRepository.save(transaction);
+            Transaction saved = transactionRepository.save(transaction);
+            if (transactionJson.getId() != null) {
+                transactionIdMap.put(transactionJson.getId(), saved.getId());
+            }
+            if (transactionJson.getParentRecurringId() != null) {
+                parentLinks.add(Map.entry(saved.getId(), transactionJson.getParentRecurringId()));
+            }
         }
 
-        log.info("JSON import completed with {} categories and {} transactions", categoriesByName.size(), transactions.size());
+        for (Map.Entry<Long, Long> link : parentLinks) {
+            Transaction child = transactionRepository.findById(link.getKey())
+                    .orElseThrow(() -> new IllegalArgumentException("Transacao importada nao encontrada para vinculo de recorrencia."));
+            Long newParentId = transactionIdMap.get(link.getValue());
+            child.setParentRecurringId(newParentId);
+            transactionRepository.save(child);
+        }
+
+        for (BackupJsonCategorizationRule ruleJson : categorizationRules) {
+            String keyword = ruleJson.getKeyword() == null ? "" : ruleJson.getKeyword().trim();
+            String categoryName = ruleJson.getCategoryName() == null ? "" : ruleJson.getCategoryName().trim();
+
+            if (keyword.isBlank() || categoryName.isBlank()) {
+                continue;
+            }
+
+            CategorizationRule rule = CategorizationRule.builder()
+                    .keyword(keyword)
+                    .categoryName(categoryName)
+                    .priority(ruleJson.getPriority() == null ? 100 : ruleJson.getPriority())
+                    .enabled(ruleJson.getEnabled() == null || ruleJson.getEnabled())
+                    .createdAt(ruleJson.getCreatedAt())
+                    .updatedAt(ruleJson.getUpdatedAt())
+                    .build();
+            categorizationRuleRepository.save(rule);
+        }
+
+        log.info("JSON import completed with {} categories, {} transactions and {} categorization rules",
+                categoriesByName.size(), transactions.size(), categorizationRules.size());
     }
 
     private Category resolveCategory(Map<String, Category> categoriesByName, String categoryName) {
@@ -316,26 +367,6 @@ public class BackupService {
         return created;
     }
 
-    /**
-     * Restores from a specific backup
-     */
-    public void restoreBackup(String backupName) throws IOException {
-        Path backupPath = backupDir.resolve(backupName);
-        if (!Files.exists(backupPath)) {
-            throw new IOException("Backup not found: " + backupName);
-        }
-
-        // Create a backup before restore
-        createBackup();
-
-        Path dbPath = getDatabasePath();
-        Files.copy(backupPath, dbPath, StandardCopyOption.REPLACE_EXISTING);
-        log.info("Database restored from: {}", backupName);
-    }
-
-    /**
-     * Removes backups older than MAX_BACKUPS
-     */
     private void cleanOldBackups() throws IOException {
         List<Map<String, Object>> backups = listBackups();
         if (backups.size() > MAX_BACKUPS) {
@@ -347,9 +378,6 @@ public class BackupService {
         }
     }
 
-    /**
-     * Gets backup settings
-     */
     public Map<String, Object> getSettings() {
         Map<String, Object> settings = new HashMap<>();
         settings.put("autoBackupEnabled", autoBackupEnabled);
@@ -359,18 +387,12 @@ public class BackupService {
         return settings;
     }
 
-    /**
-     * Updates auto backup setting
-     */
     public void setAutoBackupEnabled(boolean enabled) {
         this.autoBackupEnabled = enabled;
         saveSettings();
         log.info("Auto backup enabled: {}", enabled);
     }
 
-    /**
-     * Updates backup directory
-     */
     public void setBackupDirectory(String directory) throws IOException {
         Path newDir = Paths.get(directory);
         Files.createDirectories(newDir);
@@ -383,9 +405,6 @@ public class BackupService {
         return autoBackupEnabled;
     }
 
-    /**
-     * Updates backup interval
-     */
     public void setBackupInterval(int hours) {
         if (hours != 1 && hours != 4 && hours != 24) {
             throw new IllegalArgumentException("Invalid interval. Must be 1, 4, or 24 hours.");
@@ -399,9 +418,6 @@ public class BackupService {
         return backupIntervalHours;
     }
 
-    /**
-     * Scheduled backup - runs once per day at midnight
-     */
     @Scheduled(cron = "0 0 0 * * ?")
     public void scheduledBackup() {
         if (!autoBackupEnabled) {
