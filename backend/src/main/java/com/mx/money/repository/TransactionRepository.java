@@ -14,49 +14,55 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    /**
-     * Busca transações por período
-     */
-    List<Transaction> findByEffectiveDateBetweenOrderByEffectiveDateDesc(
-            LocalDate startDate, LocalDate endDate);
+        /**
+         * Busca transações por período
+         */
+        List<Transaction> findByEffectiveDateBetweenOrderByEffectiveDateDesc(
+                        LocalDate startDate, LocalDate endDate);
 
-    /**
-     * Busca transações por tipo
-     */
-    List<Transaction> findByTypeOrderByEffectiveDateDesc(TransactionType type);
+        /**
+         * Busca transações por tipo
+         */
+        List<Transaction> findByTypeOrderByEffectiveDateDesc(TransactionType type);
 
-    /**
-     * Busca transações por categoria
-     */
-    List<Transaction> findByCategoryIdOrderByEffectiveDateDesc(Long categoryId);
+        /**
+         * Busca transações por categoria
+         */
+        List<Transaction> findByCategoryIdOrderByEffectiveDateDesc(Long categoryId);
 
-    /**
-     * Busca transações até uma determinada data (para cálculo de saldo)
-     */
-    List<Transaction> findByEffectiveDateLessThanEqual(LocalDate date);
+        /**
+         * Busca transações até uma determinada data (para cálculo de saldo)
+         */
+        List<Transaction> findByEffectiveDateLessThanEqual(LocalDate date);
 
-    /**
-     * Busca transações em um período específico
-     */
-    @Query("SELECT t FROM Transaction t WHERE t.effectiveDate >= :startDate AND t.effectiveDate <= :endDate ORDER BY t.effectiveDate ASC")
-    List<Transaction> findTransactionsInPeriod(
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate);
+        /**
+         * Busca transações em um período específico
+         */
+        @Query("SELECT t FROM Transaction t WHERE t.effectiveDate >= :startDate AND t.effectiveDate <= :endDate ORDER BY t.effectiveDate ASC")
+        List<Transaction> findTransactionsInPeriod(
+                        @Param("startDate") LocalDate startDate,
+                        @Param("endDate") LocalDate endDate);
 
-    /**
-     * Soma de receitas até uma data
-     */
-    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.type = 'INCOME' AND t.effectiveDate <= :date")
-    BigDecimal sumIncomeUntilDate(@Param("date") LocalDate date);
+        /**
+         * Soma de receitas até uma data
+         */
+        @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.type = 'INCOME' AND t.effectiveDate <= :date")
+        BigDecimal sumIncomeUntilDate(@Param("date") LocalDate date);
 
-    /**
-     * Soma de despesas até uma data
-     */
-    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.type = 'EXPENSE' AND t.effectiveDate <= :date")
-    BigDecimal sumExpenseUntilDate(@Param("date") LocalDate date);
+        /**
+         * Soma de despesas até uma data
+         */
+        @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.type = 'EXPENSE' AND t.effectiveDate <= :date")
+        BigDecimal sumExpenseUntilDate(@Param("date") LocalDate date);
 
-    /**
-     * Lista todas as transações ordenadas por data
-     */
-    List<Transaction> findAllByOrderByEffectiveDateDesc();
+        /**
+         * Busca categorizações recentes para aprendizado da IA (descrição -> categoria)
+         */
+        @Query("SELECT DISTINCT t.description, c.name FROM Transaction t JOIN t.category c WHERE t.createdAt >= :since ORDER BY t.createdAt DESC LIMIT 50")
+        List<Object[]> findRecentCategorizations(@Param("since") java.time.LocalDateTime since);
+
+        /**
+         * Lista todas as transações ordenadas por data
+         */
+        List<Transaction> findAllByOrderByEffectiveDateDesc();
 }

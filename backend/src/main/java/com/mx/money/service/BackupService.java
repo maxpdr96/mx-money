@@ -1,10 +1,19 @@
 package com.mx.money.service;
 
+import com.mx.money.dto.BackupJsonCategory;
+import com.mx.money.dto.BackupJsonData;
+import com.mx.money.dto.BackupJsonTransaction;
+import com.mx.money.entity.Category;
+import com.mx.money.entity.RecurrenceType;
+import com.mx.money.entity.Transaction;
+import com.mx.money.repository.CategoryRepository;
+import com.mx.money.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,11 +37,16 @@ public class BackupService {
     @Value("${spring.datasource.url}")
     private String datasourceUrl;
 
+    private final CategoryRepository categoryRepository;
+    private final TransactionRepository transactionRepository;
+
     private Path backupDir;
     private boolean autoBackupEnabled = true;
     private int backupIntervalHours = 24;
 
-    public BackupService() {
+    public BackupService(CategoryRepository categoryRepository, TransactionRepository transactionRepository) {
+        this.categoryRepository = categoryRepository;
+        this.transactionRepository = transactionRepository;
         loadSettings();
         try {
             Files.createDirectories(backupDir);
@@ -184,6 +198,122 @@ public class BackupService {
         Path dbPath = getDatabasePath();
         Files.copy(inputStream, dbPath, StandardCopyOption.REPLACE_EXISTING);
         log.info("Database imported successfully");
+    }
+
+    public BackupJsonData exportDatabaseAsJson() {
+        List<BackupJsonCategory> categories = categoryRepository.findAll().stream()
+                .sorted(Comparator.comparing(Category::getName, String.CASE_INSENSITIVE_ORDER))
+                .map(category -> BackupJsonCategory.builder()
+                        .name(category.getName())
+                        .color(category.getColor())
+                        .icon(category.getIcon())
+                        .build())
+                .toList();
+
+        List<BackupJsonTransaction> transactions = transactionRepository.findAll().stream()
+                .sorted(Comparator.comparing(Transaction::getEffectiveDate).thenComparing(Transaction::getId))
+                .map(transaction -> BackupJsonTransaction.builder()
+                        .description(transaction.getDescription())
+                        .amount(transaction.getAmount())
+                        .effectiveDate(transaction.getEffectiveDate())
+                        .type(transaction.getType())
+                        .recurrence(transaction.getRecurrence())
+                        .categoryName(transaction.getCategory() != null ? transaction.getCategory().getName() : null)
+                        .lastGeneratedDate(transaction.getLastGeneratedDate())
+                        .endDate(transaction.getEndDate())
+                        .parentRecurringId(transaction.getParentRecurringId())
+                        .build())
+                .toList();
+
+        return BackupJsonData.builder()
+                .version(1)
+                .exportedAt(LocalDateTime.now())
+                .categories(categories)
+                .transactions(transactions)
+                .build();
+    }
+
+    @Transactional
+    public void importDatabaseFromJson(BackupJsonData data) throws IOException {
+        if (data == null) {
+            throw new IllegalArgumentException("JSON de importacao invalido.");
+        }
+
+        List<BackupJsonCategory> categories = Optional.ofNullable(data.getCategories()).orElse(List.of());
+        List<BackupJsonTransaction> transactions = Optional.ofNullable(data.getTransactions()).orElse(List.of());
+
+        createBackup();
+
+        transactionRepository.deleteAllInBatch();
+        categoryRepository.deleteAllInBatch();
+
+        Map<String, Category> categoriesByName = new HashMap<>();
+
+        for (BackupJsonCategory categoryJson : categories) {
+            String name = categoryJson.getName() == null ? "" : categoryJson.getName().trim();
+            if (name.isBlank()) {
+                continue;
+            }
+
+            Category category = Category.builder()
+                    .name(name)
+                    .color(categoryJson.getColor())
+                    .icon(categoryJson.getIcon())
+                    .build();
+            Category saved = categoryRepository.save(category);
+            categoriesByName.put(saved.getName().toLowerCase(Locale.ROOT), saved);
+        }
+
+        for (BackupJsonTransaction transactionJson : transactions) {
+            if (transactionJson.getDescription() == null || transactionJson.getDescription().isBlank()) {
+                throw new IllegalArgumentException("Transacao sem descricao encontrada no JSON.");
+            }
+            if (transactionJson.getAmount() == null) {
+                throw new IllegalArgumentException("Transacao sem valor encontrada no JSON.");
+            }
+            if (transactionJson.getEffectiveDate() == null) {
+                throw new IllegalArgumentException("Transacao sem data efetiva encontrada no JSON.");
+            }
+            if (transactionJson.getType() == null) {
+                throw new IllegalArgumentException("Transacao sem tipo encontrada no JSON.");
+            }
+
+            Category category = resolveCategory(categoriesByName, transactionJson.getCategoryName());
+
+            Transaction transaction = Transaction.builder()
+                    .description(transactionJson.getDescription().trim())
+                    .amount(transactionJson.getAmount().abs())
+                    .effectiveDate(transactionJson.getEffectiveDate())
+                    .type(transactionJson.getType())
+                    .recurrence(transactionJson.getRecurrence() == null ? RecurrenceType.NONE : transactionJson.getRecurrence())
+                    .category(category)
+                    .lastGeneratedDate(transactionJson.getLastGeneratedDate())
+                    .endDate(transactionJson.getEndDate())
+                    .parentRecurringId(transactionJson.getParentRecurringId())
+                    .build();
+
+            transactionRepository.save(transaction);
+        }
+
+        log.info("JSON import completed with {} categories and {} transactions", categoriesByName.size(), transactions.size());
+    }
+
+    private Category resolveCategory(Map<String, Category> categoriesByName, String categoryName) {
+        if (categoryName == null || categoryName.isBlank()) {
+            return null;
+        }
+
+        String normalizedName = categoryName.trim().toLowerCase(Locale.ROOT);
+        Category existing = categoriesByName.get(normalizedName);
+        if (existing != null) {
+            return existing;
+        }
+
+        Category created = categoryRepository.save(Category.builder()
+                .name(categoryName.trim())
+                .build());
+        categoriesByName.put(normalizedName, created);
+        return created;
     }
 
     /**

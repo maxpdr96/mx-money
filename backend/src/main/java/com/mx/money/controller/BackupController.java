@@ -1,5 +1,7 @@
 package com.mx.money.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mx.money.dto.BackupJsonData;
 import com.mx.money.service.BackupService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -22,9 +24,11 @@ import java.util.Map;
 public class BackupController {
 
     private final BackupService backupService;
+    private final ObjectMapper objectMapper;
 
-    public BackupController(BackupService backupService) {
+    public BackupController(BackupService backupService, ObjectMapper objectMapper) {
         this.backupService = backupService;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -83,6 +87,26 @@ public class BackupController {
     }
 
     /**
+     * Export data as JSON (categories + transactions)
+     */
+    @GetMapping("/export/json")
+    public ResponseEntity<Resource> exportDatabaseAsJson() throws IOException {
+        BackupJsonData data = backupService.exportDatabaseAsJson();
+        byte[] bytes = objectMapper.writeValueAsBytes(data);
+
+        String filename = "mxmoney_export_" +
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + ".json";
+
+        InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(bytes));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_JSON)
+                .contentLength(bytes.length)
+                .body(resource);
+    }
+
+    /**
      * Import database from uploaded file
      */
     @PostMapping("/import")
@@ -94,6 +118,27 @@ public class BackupController {
 
         backupService.importDatabase(file.getInputStream());
         return ResponseEntity.ok(Map.of("message", "Database imported successfully. Please restart the application."));
+    }
+
+    /**
+     * Import data from JSON (categories + transactions)
+     */
+    @PostMapping("/import/json")
+    public ResponseEntity<Map<String, String>> importDatabaseFromJson(@RequestParam("file") MultipartFile file)
+            throws IOException {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
+        }
+
+        BackupJsonData backupJsonData;
+        try {
+            backupJsonData = objectMapper.readValue(file.getInputStream(), BackupJsonData.class);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Invalid JSON file.");
+        }
+
+        backupService.importDatabaseFromJson(backupJsonData);
+        return ResponseEntity.ok(Map.of("message", "JSON data imported successfully."));
     }
 
     /**

@@ -33,7 +33,8 @@ export function SettingsPage() {
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [newDirectory, setNewDirectory] = useState('');
     const [editingDirectory, setEditingDirectory] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const fileInputDbRef = useRef<HTMLInputElement>(null);
+    const fileInputJsonRef = useRef<HTMLInputElement>(null);
 
     const dateLocale = language === 'pt-BR' ? ptBR : enUS;
 
@@ -105,7 +106,11 @@ export function SettingsPage() {
         window.location.href = backupApi.exportDatabase();
     };
 
-    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleExportJson = () => {
+        window.location.href = backupApi.exportDatabaseJson();
+    };
+
+    const handleImportDb = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -116,6 +121,25 @@ export function SettingsPage() {
 
         try {
             await backupApi.importDatabase(file);
+            showMessage('success', t.messages.databaseImported);
+            loadData();
+        } catch {
+            showMessage('error', t.messages.errorSaving);
+        }
+        e.target.value = '';
+    };
+
+    const handleImportJson = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!confirm(t.settings.backups.confirmRestore.replace('$1', file.name))) {
+            e.target.value = '';
+            return;
+        }
+
+        try {
+            await backupApi.importDatabaseJson(file);
             showMessage('success', t.messages.databaseImported);
             loadData();
         } catch {
@@ -234,21 +258,36 @@ export function SettingsPage() {
                         {t.settings.database.description}
                     </p>
 
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary" onClick={handleExport}>
                             <Download size={16} />
-                            {t.settings.database.export}
+                            {t.settings.database.exportDb}
                         </button>
-                        <button className="btn btn-ghost" onClick={() => fileInputRef.current?.click()}>
+                        <button className="btn btn-ghost" onClick={() => fileInputDbRef.current?.click()}>
                             <Upload size={16} />
-                            {t.settings.database.import}
+                            {t.settings.database.importDb}
+                        </button>
+                        <button className="btn btn-primary" onClick={handleExportJson}>
+                            <Download size={16} />
+                            {t.settings.database.exportJson}
+                        </button>
+                        <button className="btn btn-ghost" onClick={() => fileInputJsonRef.current?.click()}>
+                            <Upload size={16} />
+                            {t.settings.database.importJson}
                         </button>
                         <input
-                            ref={fileInputRef}
+                            ref={fileInputDbRef}
                             type="file"
                             accept=".db"
                             style={{ display: 'none' }}
-                            onChange={handleImport}
+                            onChange={handleImportDb}
+                        />
+                        <input
+                            ref={fileInputJsonRef}
+                            type="file"
+                            accept=".json,application/json"
+                            style={{ display: 'none' }}
+                            onChange={handleImportJson}
                         />
                     </div>
                 </div>

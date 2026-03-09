@@ -1,12 +1,17 @@
 package com.mx.money.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.mx.money.dto.BackupJsonCategory;
+import com.mx.money.dto.BackupJsonData;
+import com.mx.money.dto.BackupJsonTransaction;
+import com.mx.money.entity.TransactionType;
 import com.mx.money.service.BackupService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -14,6 +19,9 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
@@ -32,13 +40,16 @@ class BackupControllerTest {
     @Mock
     private BackupService backupService;
 
-    @InjectMocks
     private BackupController backupController;
 
     private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        backupController = new BackupController(backupService, objectMapper);
         mockMvc = MockMvcBuilders.standaloneSetup(backupController).build();
     }
 
@@ -198,6 +209,81 @@ class BackupControllerTest {
                     .andExpect(jsonPath("$.error", containsString("empty")));
 
             verify(backupService, never()).importDatabase(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/backup/export/json")
+    class ExportJsonTests {
+
+        @Test
+        @DisplayName("should export data as json file")
+        void shouldExportJson() throws Exception {
+            BackupJsonData data = BackupJsonData.builder()
+                    .version(1)
+                    .exportedAt(LocalDateTime.now())
+                    .categories(List.of(
+                            BackupJsonCategory.builder().name("Moradia").color("#123456").icon("home").build()))
+                    .transactions(List.of(
+                            BackupJsonTransaction.builder()
+                                    .description("Aluguel")
+                                    .amount(new BigDecimal("1500.00"))
+                                    .effectiveDate(LocalDate.of(2026, 3, 1))
+                                    .type(TransactionType.EXPENSE)
+                                    .categoryName("Moradia")
+                                    .build()))
+                    .build();
+
+            when(backupService.exportDatabaseAsJson()).thenReturn(data);
+
+            mockMvc.perform(get("/api/backup/export/json"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Content-Disposition", containsString(".json")))
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+            verify(backupService).exportDatabaseAsJson();
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/backup/import/json")
+    class ImportJsonTests {
+
+        @Test
+        @DisplayName("should import json data from file")
+        void shouldImportJson() throws Exception {
+            String json = """
+                    {
+                      "version": 1,
+                      "categories": [
+                        { "name": "Moradia", "color": "#123456", "icon": "home" }
+                      ],
+                      "transactions": [
+                        {
+                          "description": "Aluguel",
+                          "amount": 1500.00,
+                          "effectiveDate": "2026-03-01",
+                          "type": "EXPENSE",
+                          "recurrence": "MONTHLY",
+                          "categoryName": "Moradia"
+                        }
+                      ]
+                    }
+                    """;
+
+            MockMultipartFile file = new MockMultipartFile(
+                    "file",
+                    "backup.json",
+                    MediaType.APPLICATION_JSON_VALUE,
+                    json.getBytes());
+
+            doNothing().when(backupService).importDatabaseFromJson(any(BackupJsonData.class));
+
+            mockMvc.perform(multipart("/api/backup/import/json").file(file))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.message", containsString("imported")));
+
+            verify(backupService).importDatabaseFromJson(any(BackupJsonData.class));
         }
     }
 

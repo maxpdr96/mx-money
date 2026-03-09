@@ -120,8 +120,10 @@ export interface Translations {
         database: {
             title: string;
             description: string;
-            export: string;
-            import: string;
+            exportDb: string;
+            importDb: string;
+            exportJson: string;
+            importJson: string;
         };
         autoBackup: {
             title: string;
@@ -309,9 +311,11 @@ export const translations: Record<Language, Translations> = {
             },
             database: {
                 title: 'Banco de Dados',
-                description: 'Exporte seu banco de dados para backup externo ou importe um arquivo existente.',
-                export: 'Exportar',
-                import: 'Importar',
+                description: 'Exporte/importe o banco completo (.db) ou os dados em JSON (categorias e transações, incluindo recorrências).',
+                exportDb: 'Exportar .db',
+                importDb: 'Importar .db',
+                exportJson: 'Exportar JSON',
+                importJson: 'Importar JSON',
             },
             autoBackup: {
                 title: 'Backup Automático',
@@ -491,9 +495,11 @@ export const translations: Record<Language, Translations> = {
             },
             database: {
                 title: 'Database',
-                description: 'Export your database for external backup or import an existing file.',
-                export: 'Export',
-                import: 'Import',
+                description: 'Export/import the full database (.db) or JSON data (categories and transactions, including recurrence).',
+                exportDb: 'Export .db',
+                importDb: 'Import .db',
+                exportJson: 'Export JSON',
+                importJson: 'Import JSON',
             },
             autoBackup: {
                 title: 'Automatic Backup',
