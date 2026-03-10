@@ -45,6 +45,7 @@ public class BackupService {
     private Path backupDir;
     private boolean autoBackupEnabled = true;
     private int backupIntervalHours = 24;
+    private LocalDateTime lastBackupTime;
 
     public BackupService(
             CategoryRepository categoryRepository,
@@ -66,6 +67,8 @@ public class BackupService {
     private void loadSettings() {
         this.backupDir = DEFAULT_BACKUP_DIR;
         this.autoBackupEnabled = true;
+        this.backupIntervalHours = 24;
+        this.lastBackupTime = null;
 
         if (Files.exists(SETTINGS_FILE)) {
             try {
@@ -90,6 +93,15 @@ public class BackupService {
                         log.warn("Invalid backup interval, using default");
                     }
                 }
+
+                String last = props.getProperty("lastBackupTime");
+                if (last != null && !last.isBlank()) {
+                    try {
+                        this.lastBackupTime = LocalDateTime.parse(last);
+                    } catch (Exception e) {
+                        log.warn("Invalid last backup time in settings");
+                    }
+                }
             } catch (IOException e) {
                 log.warn("Failed to load backup settings, using defaults", e);
             }
@@ -103,6 +115,9 @@ public class BackupService {
             props.setProperty("backupDirectory", backupDir.toAbsolutePath().toString());
             props.setProperty("autoBackupEnabled", String.valueOf(autoBackupEnabled));
             props.setProperty("backupIntervalHours", String.valueOf(backupIntervalHours));
+            if (lastBackupTime != null) {
+                props.setProperty("lastBackupTime", lastBackupTime.toString());
+            }
             props.store(Files.newOutputStream(SETTINGS_FILE), "MX-Money Backup Settings");
         } catch (IOException e) {
             log.error("Failed to save backup settings", e);
@@ -115,12 +130,16 @@ public class BackupService {
     public String createBackup() throws IOException {
         Files.createDirectories(backupDir);
 
-        String backupName = "backup_" + LocalDateTime.now().format(BACKUP_DATE_FORMAT) + ".json";
+        LocalDateTime now = LocalDateTime.now();
+        String backupName = "backup_" + now.format(BACKUP_DATE_FORMAT) + ".json";
         Path backupPath = backupDir.resolve(backupName);
 
         BackupJsonData data = exportDatabaseAsJson();
         objectMapper.writeValue(backupPath.toFile(), data);
         log.info("JSON backup created: {}", backupName);
+
+        this.lastBackupTime = now;
+        saveSettings();
 
         cleanOldBackups();
         return backupName;
@@ -167,6 +186,7 @@ public class BackupService {
                         .name(category.getName())
                         .color(category.getColor())
                         .icon(category.getIcon())
+                        .monthlyBudget(category.getMonthlyBudget())
                         .createdAt(category.getCreatedAt())
                         .updatedAt(category.getUpdatedAt())
                         .build())
@@ -269,6 +289,7 @@ public class BackupService {
                     .name(name)
                     .color(categoryJson.getColor())
                     .icon(categoryJson.getIcon())
+                    .monthlyBudget(categoryJson.getMonthlyBudget())
                     .createdAt(categoryJson.getCreatedAt())
                     .updatedAt(categoryJson.getUpdatedAt())
                     .build();
@@ -418,14 +439,23 @@ public class BackupService {
         return backupIntervalHours;
     }
 
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(fixedRate = 3600000) // Verifica a cada 1 hora
     public void scheduledBackup() {
         if (!autoBackupEnabled) {
-            log.info("Scheduled backup skipped (disabled)");
             return;
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        if (lastBackupTime != null) {
+            LocalDateTime nextBackupTime = lastBackupTime.plusHours(backupIntervalHours);
+            if (now.isBefore(nextBackupTime)) {
+                // Ainda não chegou a hora do próximo backup
+                return;
+            }
+        }
+
         try {
+            log.info("Starting scheduled backup (Interval: {}h)", backupIntervalHours);
             String backupName = createBackup();
             log.info("Scheduled backup completed: {}", backupName);
         } catch (IOException e) {
