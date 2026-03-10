@@ -164,9 +164,9 @@ export function SearchPage() {
         let monthQuery: number | null = null;
 
         // Extrai #categoria
-        const categoryMatch = term.match(/#(?:categoria|category):\s*([^\s#]+)/i);
+        const categoryMatch = term.match(/#(?:categoria|category|cat):\s*([^#]+?)(?=\s*#|$)/i);
         if (categoryMatch) {
-            categoryQuery = normalizeText(categoryMatch[1]);
+            categoryQuery = normalizeText(categoryMatch[1].trim());
             term = term.replace(categoryMatch[0], '').trim();
         }
 
