@@ -41,6 +41,9 @@ export interface Translations {
         expenses: string;
         latestTransactions: string;
         spendingByCategory: string;
+        budgets: string;
+        budgetUsed: string;
+        remaining: string;
     };
 
     // Transactions
@@ -159,6 +162,7 @@ export interface Translations {
         editCategory: string;
         name: string;
         color: string;
+        budget: string;
         confirmDelete: string;
     };
 
@@ -241,6 +245,9 @@ export const translations: Record<Language, Translations> = {
             expenses: 'Despesas',
             latestTransactions: 'Últimas Transações',
             spendingByCategory: 'Gastos por Categoria',
+            budgets: 'Orçamentos',
+            budgetUsed: '$1 de $2 usados',
+            remaining: 'Restante',
         },
         transactions: {
             title: 'Transações',
@@ -347,6 +354,7 @@ export const translations: Record<Language, Translations> = {
             editCategory: 'Editar Categoria',
             name: 'Nome',
             color: 'Cor',
+            budget: 'Orçamento Mensal (opcional)',
             confirmDelete: 'Tem certeza que deseja excluir esta categoria?',
         },
         csvImport: {
@@ -423,6 +431,9 @@ export const translations: Record<Language, Translations> = {
             expenses: 'Expenses',
             latestTransactions: 'Latest Transactions',
             spendingByCategory: 'Spending by Category',
+            budgets: 'Budgets',
+            budgetUsed: '$1 of $2 used',
+            remaining: 'Remaining',
         },
         transactions: {
             title: 'Transactions',
@@ -529,6 +540,7 @@ export const translations: Record<Language, Translations> = {
             editCategory: 'Edit Category',
             name: 'Name',
             color: 'Color',
+            budget: 'Monthly Budget (optional)',
             confirmDelete: 'Are you sure you want to delete this category?',
         },
         csvImport: {

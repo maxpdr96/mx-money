@@ -1,65 +1,66 @@
 /* ================================
    MX-Money Design System
-   Tema: Branco/Laranja com Dark Mode Toggle
+   Tema: Minimalista Moderno (Roxo)
 ================================ */
 
 :root {
   /* Light Mode (Default) */
-  --color-primary: #f97316;
-  --color-primary-hover: #ea580c;
-  --color-primary-light: #fff7ed;
-  --color-secondary: #fb923c;
+  --color-primary: #7c3aed; /* Violet 600 */
+  --color-primary-hover: #6d28d9; /* Violet 700 */
+  --color-primary-light: #f5f3ff; /* Violet 50 */
+  --color-secondary: #8b5cf6; /* Violet 500 */
 
-  --color-success: #22c55e;
-  --color-success-light: #dcfce7;
-  --color-danger: #ef4444;
-  --color-danger-light: #fef2f2;
-  --color-warning: #f59e0b;
+  --color-success: #10b981; /* Emerald 500 */
+  --color-success-light: #d1fae5;
+  --color-danger: #ef4444; /* Red 500 */
+  --color-danger-light: #fee2e2;
+  --color-warning: #f59e0b; /* Amber 500 */
 
   --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
+  --bg-secondary: #fafafa; /* Lighter background for minimalist feel */
+  --bg-tertiary: #f4f4f5;
   --bg-card: #ffffff;
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-primary: #18181b; /* Zinc 900 */
+  --text-secondary: #52525b; /* Zinc 500 */
+  --text-muted: #a1a1aa; /* Zinc 400 */
 
-  --border-color: #e2e8f0;
-  --border-radius: 12px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --border-color: #e4e4e7; /* Zinc 200 */
+  --border-radius: 16px; /* Softer, modern corners */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.08);
 
-  --chart-grid: #e2e8f0;
-  --chart-text: #64748b;
+  --chart-grid: #e4e4e7;
+  --chart-text: #71717a;
 }
 
 /* Dark Mode */
 [data-theme="dark"] {
-  --color-primary: #fb923c;
-  --color-primary-hover: #f97316;
-  --color-primary-light: #431407;
+  --color-primary: #8b5cf6; /* Violet 500 */
+  --color-primary-hover: #a78bfa; /* Violet 400 */
+  --color-primary-light: #2e1065; /* Violet 900 */
+  --color-secondary: #7c3aed; /* Violet 600 */
 
-  --color-success-light: #14532d;
+  --color-success-light: #064e3b;
   --color-danger-light: #450a0a;
 
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --bg-card: #1e293b;
+  --bg-primary: #09090b; /* Zinc 950 */
+  --bg-secondary: #18181b; /* Zinc 900 */
+  --bg-tertiary: #27272a; /* Zinc 800 */
+  --bg-card: #18181b;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #64748b;
+  --text-primary: #fafafa; /* Zinc 50 */
+  --text-secondary: #a1a1aa; /* Zinc 400 */
+  --text-muted: #71717a; /* Zinc 500 */
 
-  --border-color: #334155;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --border-color: #27272a; /* Zinc 800 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.6);
 
-  --chart-grid: #334155;
-  --chart-text: #94a3b8;
+  --chart-grid: #27272a;
+  --chart-text: #a1a1aa;
 }
 
 * {
@@ -86,13 +87,14 @@ body {
 }
 
 .header {
-  background: var(--bg-card);
+  background: var(--bg-primary); /* Blend better with page */
   border-bottom: 1px solid var(--border-color);
   padding: 1rem 2rem;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px); /* Modern blur effect */
+  background: color-mix(in srgb, var(--bg-primary) 85%, transparent);
 }
 
 .header-content {
@@ -109,6 +111,7 @@ body {
   gap: 0.75rem;
   font-size: 1.5rem;
   font-weight: 700;
+  letter-spacing: -0.02em; /* Tighter modern font spacing */
   color: var(--text-primary);
   text-decoration: none;
 }
@@ -117,10 +120,11 @@ body {
   width: 40px;
   height: 40px;
   background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .nav {
@@ -222,18 +226,24 @@ body {
   border-radius: var(--border-radius);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem; /* slightly larger margin */
 }
 
 .card-title {
-  font-size: 1rem;
+  font-size: 1.1rem; /* slightly larger */
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -247,6 +257,7 @@ body {
   background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
   border: none;
   color: white;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 25%, transparent);
 }
 
 .balance-card .balance-label {
@@ -302,43 +313,49 @@ body {
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  border-radius: 8px;
-  font-weight: 500;
+  padding: 0.625rem 1.5rem; /* slightly wider padding */
+  border-radius: 12px; /* rounded buttons */
+  font-weight: 600; /* bolder text */
   font-size: 0.875rem;
   cursor: pointer;
   border: none;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .btn-primary {
   background: var(--color-primary);
   color: white;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .btn-primary:hover {
   background: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 .btn-success {
   background: var(--color-success);
   color: white;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-success) 30%, transparent);
 }
 
 .btn-success:hover {
-  background: #16a34a;
+  background: #059669; /* Emerald 600 */
+  transform: translateY(-2px);
 }
 
 .btn-danger {
   background: var(--color-danger);
   color: white;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-danger) 30%, transparent);
 }
 
 .btn-danger:hover {
-  background: #dc2626;
+  background: #dc2626; /* Red 600 */
+  transform: translateY(-2px);
 }
 
 .btn-ghost {
@@ -350,29 +367,32 @@ body {
 .btn-ghost:hover {
   background: var(--bg-tertiary);
   color: var(--text-primary);
+  border-color: var(--text-muted);
 }
 
 .btn-icon {
   padding: 0.5rem;
-  border-radius: 6px;
+  border-radius: 10px;
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* ================================
    Forms
 ================================ */
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .form-label {
   display: block;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: 0.5rem;
 }
@@ -380,20 +400,20 @@ body {
 .form-input,
 .form-select {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 0.9rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
   background: var(--bg-primary);
   color: var(--text-primary);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
 }
 
 .form-input:focus,
 .form-select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-light);
+  box-shadow: 0 0 0 4px var(--color-primary-light);
 }
 
 .form-row {

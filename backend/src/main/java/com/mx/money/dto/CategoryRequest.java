@@ -2,7 +2,9 @@ package com.mx.money.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
+import java.math.BigDecimal;
 
 /**
  * DTO para criação e atualização de categorias
@@ -23,4 +25,7 @@ public class CategoryRequest {
 
     @Size(max = 50, message = "Ícone deve ter no máximo 50 caracteres")
     private String icon;
+
+    @DecimalMin(value = "0.0", message = "Orçamento não pode ser negativo")
+    private BigDecimal monthlyBudget;
 }

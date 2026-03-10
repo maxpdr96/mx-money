@@ -4,6 +4,7 @@ import { TransactionList } from '../components/TransactionList';
 import { TransactionForm } from '../components/TransactionForm';
 import { CategoryList } from '../components/CategoryManager';
 import { SpendingByCategory } from '../components/SpendingByCategory';
+import { BudgetOverview } from '../components/BudgetOverview';
 import { useLanguage } from '../i18n';
 import { Plus } from 'lucide-react';
 
@@ -28,6 +29,7 @@ export function Dashboard() {
             <div className="dashboard-main">
                 <TransactionList />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <BudgetOverview />
                     <CategoryList />
                     <SpendingByCategory />
                 </div>

@@ -29,6 +29,9 @@ public class Category {
 
     private String icon; // Nome do ícone (ex: "shopping-cart")
 
+    @Column(name = "monthly_budget", precision = 15, scale = 2)
+    private java.math.BigDecimal monthlyBudget;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

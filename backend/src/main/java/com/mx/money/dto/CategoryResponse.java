@@ -2,6 +2,7 @@ package com.mx.money.dto;
 
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -18,5 +19,6 @@ public class CategoryResponse {
     private String name;
     private String color;
     private String icon;
+    private BigDecimal monthlyBudget;
     private LocalDateTime createdAt;
 }

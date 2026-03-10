@@ -3,6 +3,7 @@ export interface Category {
     name: string;
     color: string | null;
     icon: string | null;
+    monthlyBudget: number | null;
     createdAt: string;
 }
 
@@ -10,6 +11,7 @@ export interface CategoryRequest {
     name: string;
     color?: string;
     icon?: string;
+    monthlyBudget?: number | null;
 }
 
 export type TransactionType = 'INCOME' | 'EXPENSE';

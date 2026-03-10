@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../hooks/useApi';
 import type { CategoryRequest, Category } from '../types';
-import { X, Plus, Tag, Pencil, Trash2 } from 'lucide-react';
+import { X, Plus, Tag, Pencil, Trash2, Wallet } from 'lucide-react';
+import { useLanguage } from '../i18n';
 
 interface CategoryFormProps {
     onClose: () => void;
@@ -11,10 +12,12 @@ interface CategoryFormProps {
 
 export function CategoryForm({ onClose, onSuccess, category }: CategoryFormProps) {
     const isEditing = !!category;
+    const { t } = useLanguage();
 
     const [name, setName] = useState(category?.name || '');
     const [color, setColor] = useState(category?.color || '#6366f1');
     const [icon, setIcon] = useState(category?.icon || '');
+    const [monthlyBudget, setMonthlyBudget] = useState<string>(category?.monthlyBudget?.toString() || '');
 
     const createMutation = useCreateCategory();
     const updateMutation = useUpdateCategory();
@@ -24,6 +27,7 @@ export function CategoryForm({ onClose, onSuccess, category }: CategoryFormProps
             setName(category.name);
             setColor(category.color || '#6366f1');
             setIcon(category.icon || '');
+            setMonthlyBudget(category.monthlyBudget?.toString() || '');
         }
     }, [category]);
 
@@ -34,6 +38,7 @@ export function CategoryForm({ onClose, onSuccess, category }: CategoryFormProps
             name,
             color,
             icon: icon || undefined,
+            monthlyBudget: monthlyBudget ? parseFloat(monthlyBudget) : null,
         };
 
         try {
@@ -62,7 +67,7 @@ export function CategoryForm({ onClose, onSuccess, category }: CategoryFormProps
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2 className="modal-title">{isEditing ? 'Editar Categoria' : 'Nova Categoria'}</h2>
+                    <h2 className="modal-title">{isEditing ? t.categories.editCategory : t.categories.newCategory}</h2>
                     <button className="modal-close" onClick={onClose}>
                         <X size={24} />
                     </button>
@@ -71,7 +76,7 @@ export function CategoryForm({ onClose, onSuccess, category }: CategoryFormProps
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label className="form-label" htmlFor="name">
-                            Nome da Categoria
+                            {t.categories.name}
                         </label>
                         <input
                             id="name"
@@ -85,7 +90,7 @@ export function CategoryForm({ onClose, onSuccess, category }: CategoryFormProps
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Cor</label>
+                        <label className="form-label">{t.categories.color}</label>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                             {presetColors.map((c) => (
                                 <button
@@ -120,16 +125,44 @@ export function CategoryForm({ onClose, onSuccess, category }: CategoryFormProps
                         />
                     </div>
 
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="monthlyBudget">
+                            {t.categories.budget}
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                            <div style={{
+                                position: 'absolute',
+                                left: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                color: 'var(--text-muted)',
+                                pointerEvents: 'none'
+                            }}>
+                                <Wallet size={16} />
+                            </div>
+                            <input
+                                id="monthlyBudget"
+                                type="number"
+                                step="0.01"
+                                className="form-input"
+                                placeholder="0,00"
+                                value={monthlyBudget}
+                                onChange={(e) => setMonthlyBudget(e.target.value)}
+                                style={{ paddingLeft: '36px' }}
+                            />
+                        </div>
+                    </div>
+
                     <div className="modal-footer">
                         <button type="button" className="btn btn-ghost" onClick={onClose}>
-                            Cancelar
+                            {t.common.cancel}
                         </button>
                         <button
                             type="submit"
                             className="btn btn-primary"
                             disabled={isPending}
                         >
-                            {isPending ? 'Salvando...' : isEditing ? 'Atualizar' : 'Salvar'}
+                            {isPending ? t.common.loading : t.common.save}
                         </button>
                     </div>
                 </form>
@@ -143,6 +176,14 @@ export function CategoryList() {
     const deleteMutation = useDeleteCategory();
     const [showForm, setShowForm] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const { t, language } = useLanguage();
+
+    const formatCurrency = (value: number): string => {
+        return new Intl.NumberFormat(language, {
+            style: 'currency',
+            currency: language === 'pt-BR' ? 'BRL' : 'USD',
+        }).format(value);
+    };
 
     const sortedCategories = useMemo(() => {
         if (!categories) return [];
@@ -154,7 +195,7 @@ export function CategoryList() {
     };
 
     const handleDelete = async (id: number) => {
-        if (confirm('Tem certeza que deseja excluir esta categoria?')) {
+        if (confirm(t.categories.confirmDelete)) {
             await deleteMutation.mutateAsync(id);
         }
     };
@@ -163,7 +204,7 @@ export function CategoryList() {
         return (
             <div className="card">
                 <div className="card-header">
-                    <h3 className="card-title">Categorias</h3>
+                    <h3 className="card-title">{t.categories.title}</h3>
                 </div>
                 <div className="loading">
                     <div className="spinner"></div>
@@ -178,17 +219,17 @@ export function CategoryList() {
                 <div className="card-header">
                     <h3 className="card-title">
                         <Tag size={16} style={{ display: 'inline', marginRight: '8px' }} />
-                        Categorias
+                        {t.categories.title}
                     </h3>
                     <button className="btn btn-primary" onClick={() => setShowForm(true)}>
                         <Plus size={16} />
-                        Nova
+                        {t.common.create}
                     </button>
                 </div>
 
                 {!sortedCategories || sortedCategories.length === 0 ? (
                     <div className="empty-state">
-                        <p>Nenhuma categoria cadastrada</p>
+                        <p>{t.common.noData}</p>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -207,23 +248,30 @@ export function CategoryList() {
                                             backgroundColor: cat.color || '#6366f1',
                                         }}
                                     />
-                                    <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
-                                        {cat.name}
-                                    </span>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
+                                            {cat.name}
+                                        </span>
+                                        {cat.monthlyBudget && (
+                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                {t.categories.budget}: {formatCurrency(cat.monthlyBudget)}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="transaction-actions" style={{ opacity: 1 }}>
                                     <button
                                         className="btn btn-icon btn-ghost"
                                         onClick={() => handleEdit(cat)}
-                                        title="Editar"
+                                        title={t.common.edit}
                                     >
                                         <Pencil size={14} />
                                     </button>
                                     <button
                                         className="btn btn-icon btn-ghost"
                                         onClick={() => handleDelete(cat.id)}
-                                        title="Excluir"
+                                        title={t.common.delete}
                                     >
                                         <Trash2 size={14} />
                                     </button>
