@@ -16,6 +16,17 @@ import {
 } from 'lucide-react';
 import type { Transaction } from '../types';
 import { SpendingByCategory } from '../components/SpendingByCategory';
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Legend,
+    ReferenceLine,
+    ResponsiveContainer,
+} from 'recharts';
 
 interface TransactionItemProps {
     transaction: Transaction;
@@ -94,6 +105,30 @@ function TransactionItem({ transaction, onEdit, onDelete }: TransactionItemProps
     );
 }
 
+function DiffBadge({ current, previous, positiveIsGood, selectedMonth, language }: {
+    current: number;
+    previous: number;
+    positiveIsGood: boolean;
+    selectedMonth: number | null;
+    language: string;
+}) {
+    if (previous === 0) return null;
+    const pct = ((current - previous) / Math.abs(previous)) * 100;
+    const isUp = pct > 0;
+    const isGood = positiveIsGood ? isUp : !isUp;
+    const color = isGood ? 'var(--color-success)' : 'var(--color-danger)';
+    const arrow = isUp ? '↑' : '↓';
+    const periodLabel = selectedMonth === null
+        ? (language === 'pt-BR' ? 'vs ano anterior' : 'vs prev year')
+        : (language === 'pt-BR' ? 'vs mês anterior' : 'vs prev month');
+
+    return (
+        <div style={{ fontSize: '0.75rem', color, marginTop: '4px', fontWeight: 600 }}>
+            {arrow}{Math.abs(pct).toFixed(1)}% <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>{periodLabel}</span>
+        </div>
+    );
+}
+
 export function TransactionsPage() {
     const currentDate = new Date();
     const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
@@ -165,6 +200,47 @@ export function TransactionsPage() {
         return { income, expense, balance: income - expense };
     }, [filteredTransactions]);
 
+    // Dados mensais para o gráfico anual
+    const yearlyChartData = useMemo(() => {
+        if (!allTransactions || selectedMonth !== null) return [];
+        const locale = language === 'pt-BR' ? ptBR : enUS;
+        return Array.from({ length: 12 }, (_, monthIndex) => {
+            const monthTxs = allTransactions.filter(t => {
+                const d = parseISO(t.effectiveDate);
+                return d.getFullYear() === selectedYear && d.getMonth() === monthIndex;
+            });
+            const income = monthTxs.filter(t => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0);
+            const expense = monthTxs.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0);
+            return {
+                month: format(new Date(selectedYear, monthIndex, 1), 'MMM', { locale }),
+                monthIndex,
+                income,
+                expense,
+                balance: income - expense,
+            };
+        });
+    }, [allTransactions, selectedYear, selectedMonth, language]);
+
+    // Totais do período anterior para comparativo
+    const previousTotals = useMemo(() => {
+        if (!allTransactions) return null;
+        let txs: typeof allTransactions;
+        if (selectedMonth === null) {
+            const prevYear = selectedYear - 1;
+            txs = allTransactions.filter(t => parseISO(t.effectiveDate).getFullYear() === prevYear);
+        } else {
+            const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+            const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
+            txs = allTransactions.filter(t => {
+                const d = parseISO(t.effectiveDate);
+                return d.getFullYear() === prevYear && d.getMonth() === prevMonth;
+            });
+        }
+        const income = txs.filter(t => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0);
+        const expense = txs.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0);
+        return { income, expense };
+    }, [allTransactions, selectedYear, selectedMonth]);
+
     const handleDelete = async (id: number) => {
         if (confirm(t.transactions.confirmDelete)) {
             await deleteMutation.mutateAsync(id);
@@ -229,6 +305,77 @@ export function TransactionsPage() {
                 ))}
             </div>
 
+            {/* Gráfico anual: receita vs despesa por mês */}
+            {selectedMonth === null && yearlyChartData.some(d => d.income > 0 || d.expense > 0) && (
+                <div className="card" style={{ marginBottom: '1.5rem' }}>
+                    <div className="card-header">
+                        <h3 className="card-title">
+                            {language === 'pt-BR' ? `Receitas vs Despesas — ${selectedYear}` : `Income vs Expenses — ${selectedYear}`}
+                        </h3>
+                        <span style={{
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: totals.balance >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
+                        }}>
+                            {totals.balance >= 0
+                                ? (language === 'pt-BR' ? `Sobrou ${formatCurrency(totals.balance)}` : `Saved ${formatCurrency(totals.balance)}`)
+                                : (language === 'pt-BR' ? `Gastou ${formatCurrency(Math.abs(totals.balance))} a mais` : `Overspent ${formatCurrency(Math.abs(totals.balance))}`)}
+                        </span>
+                    </div>
+                    <div style={{ height: '260px' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={yearlyChartData} margin={{ top: 4, right: 8, left: 8, bottom: 0 }}
+                                onClick={(e) => {
+                                    if (e?.activePayload?.[0]) {
+                                        const idx = (e.activePayload[0].payload as { monthIndex: number }).monthIndex;
+                                        setSelectedMonth(idx);
+                                    }
+                                }}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
+                                <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} />
+                                <YAxis
+                                    tick={{ fontSize: 11, fill: 'var(--text-secondary)' }}
+                                    tickFormatter={(v: number) => {
+                                        if (v >= 1000) return `${(v / 1000).toFixed(0)}k`;
+                                        return String(v);
+                                    }}
+                                    width={45}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: 'var(--bg-secondary)',
+                                        border: '1px solid var(--border-color)',
+                                        borderRadius: '8px',
+                                        color: 'var(--text-primary)',
+                                    }}
+                                    formatter={(value: number, name: string) => [
+                                        formatCurrency(value),
+                                        name === 'income'
+                                            ? (language === 'pt-BR' ? 'Receita' : 'Income')
+                                            : (language === 'pt-BR' ? 'Despesa' : 'Expense'),
+                                    ]}
+                                />
+                                <Legend
+                                    formatter={(value) =>
+                                        value === 'income'
+                                            ? (language === 'pt-BR' ? 'Receita' : 'Income')
+                                            : (language === 'pt-BR' ? 'Despesa' : 'Expense')
+                                    }
+                                />
+                                <ReferenceLine y={0} stroke="var(--border-color)" />
+                                <Bar dataKey="income" fill="var(--color-success)" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                                <Bar dataKey="expense" fill="var(--color-danger)" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem', textAlign: 'center' }}>
+                        {language === 'pt-BR' ? 'Clique em um mês para filtrar' : 'Click a month to filter'}
+                    </p>
+                </div>
+            )}
+
             {/* Gráfico de Gastos (mostra se houver dados) */}
             <div style={{ marginBottom: '1.5rem' }}>
                 <SpendingByCategory transactions={filteredTransactions} isLoading={isLoading} />
@@ -244,6 +391,9 @@ export function TransactionsPage() {
                     <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-success)' }}>
                         {formatCurrency(totals.income)}
                     </div>
+                    {previousTotals && previousTotals.income > 0 && (
+                        <DiffBadge current={totals.income} previous={previousTotals.income} positiveIsGood={true} selectedMonth={selectedMonth} language={language} />
+                    )}
                 </div>
 
                 <div className="card" style={{ textAlign: 'center' }}>
@@ -254,12 +404,17 @@ export function TransactionsPage() {
                     <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-danger)' }}>
                         {formatCurrency(totals.expense)}
                     </div>
+                    {previousTotals && previousTotals.expense > 0 && (
+                        <DiffBadge current={totals.expense} previous={previousTotals.expense} positiveIsGood={false} selectedMonth={selectedMonth} language={language} />
+                    )}
                 </div>
 
                 <div className="card" style={{ textAlign: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '0.5rem' }}>
                         <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                            {language === 'pt-BR' ? 'Saldo do Mês' : 'Month Balance'}
+                            {selectedMonth === null
+                                ? (language === 'pt-BR' ? 'Saldo do Ano' : 'Year Balance')
+                                : (language === 'pt-BR' ? 'Saldo do Mês' : 'Month Balance')}
                         </span>
                     </div>
                     <div style={{
@@ -269,6 +424,12 @@ export function TransactionsPage() {
                     }}>
                         {formatCurrency(totals.balance)}
                     </div>
+                    {previousTotals && (previousTotals.income > 0 || previousTotals.expense > 0) && (() => {
+                        const prevBalance = previousTotals.income - previousTotals.expense;
+                        return prevBalance !== 0
+                            ? <DiffBadge current={totals.balance} previous={prevBalance} positiveIsGood={true} selectedMonth={selectedMonth} language={language} />
+                            : null;
+                    })()}
                 </div>
             </div>
 

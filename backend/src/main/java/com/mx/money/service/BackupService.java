@@ -179,6 +179,7 @@ public class BackupService {
         log.info("Backup deleted: {}", backupName);
     }
 
+    @Transactional(readOnly = true)
     public BackupJsonData exportDatabaseAsJson() {
         List<BackupJsonCategory> categories = categoryRepository.findAll().stream()
                 .sorted(Comparator.comparing(Category::getName, String.CASE_INSENSITIVE_ORDER))
