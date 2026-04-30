@@ -247,15 +247,16 @@ public class BackupService {
             throw new IOException("Backup not found: " + backupName);
         }
 
-        // Safety backup before restore
-        createBackup();
-
+        // Read the target file BEFORE creating the safety backup,
+        // because cleanOldBackups() could delete it if we're at MAX_BACKUPS.
         BackupJsonData backupData;
         try {
             backupData = objectMapper.readValue(backupPath.toFile(), BackupJsonData.class);
         } catch (IOException e) {
             throw new IllegalArgumentException("Invalid backup JSON: " + backupName);
         }
+
+        createBackup();
 
         doImportFromJson(backupData, false);
         log.info("Database restored from JSON backup: {}", backupName);
@@ -440,7 +441,7 @@ public class BackupService {
         return backupIntervalHours;
     }
 
-    @Scheduled(fixedRate = 3600000) // Verifica a cada 1 hora
+    @Scheduled(fixedRate = 60000) // Verifica a cada 1 minuto
     public void scheduledBackup() {
         if (!autoBackupEnabled) {
             return;
