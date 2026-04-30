@@ -3,6 +3,7 @@ import { useCreateTransaction, useUpdateTransaction, useCategories } from '../ho
 import { useLanguage } from '../i18n';
 import type { TransactionRequest, TransactionType, RecurrenceType, Transaction } from '../types';
 import { X } from 'lucide-react';
+import { Calculator } from './Calculator';
 
 interface TransactionFormProps {
     onClose: () => void;
@@ -70,7 +71,9 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className={`modal${!isEditing ? ' modal-with-calc' : ''}`} onClick={(e) => e.stopPropagation()}>
+                <div className="modal-with-calc-layout">
+                <div className="modal-form-panel">
                 <div className="modal-header">
                     <h2 className="modal-title">
                         {isEditing ? t.transactions.form.editTitle : t.transactions.form.title}
@@ -230,6 +233,13 @@ export function TransactionForm({ onClose, onSuccess, transaction }: Transaction
                         </button>
                     </div>
                 </form>
+                </div>
+                {!isEditing && (
+                    <div className="modal-calc-panel">
+                        <Calculator onUse={(value) => setAmount(value)} />
+                    </div>
+                )}
+                </div>
             </div>
         </div>
     );
