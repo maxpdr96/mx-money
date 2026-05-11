@@ -189,6 +189,132 @@ export interface Translations {
         categoryCol: string;
     };
 
+    // Stocks
+    stocks: {
+        title: string;
+        newStock: string;
+        editStock: string;
+        ticker: string;
+        tickerPlaceholder: string;
+        name: string;
+        sector: string;
+        cnpj: string;
+        cnpjPlaceholder: string;
+        notes: string;
+        noStocks: string;
+        noStocksHint: string;
+        confirmDeleteStock: string;
+        quantity: string;
+        avgCost: string;
+        totalInvested: string;
+        totalSales: string;
+        realizedPL: string;
+        totalDividends: string;
+        totalJcp: string;
+        portfolioSummary: string;
+        totalInvestedAll: string;
+        totalReturnAll: string;
+        totalProventosAll: string;
+        events: string;
+        addEvent: string;
+        editEvent: string;
+        noEvents: string;
+        noEventsHint: string;
+        confirmDeleteEvent: string;
+        eventType: string;
+        eventDate: string;
+        unitPrice: string;
+        fees: string;
+        splitRatio: string;
+        splitRatioHint: string;
+        totalValue: string;
+        bonusShares: string;
+        declaredValue: string;
+        totalAmortization: string;
+        amortPerShare: string;
+        reverseSplitRatio: string;
+        reverseSplitRatioHint: string;
+        eventTypes: {
+            BUY: string;
+            SELL: string;
+            DIVIDEND: string;
+            JCP: string;
+            SPLIT: string;
+            REVERSE_SPLIT: string;
+            BONUS: string;
+            SUBSCRIPTION: string;
+            AMORTIZATION: string;
+        };
+        shares: string;
+        back: string;
+        detail: string;
+        jcpNote: string;
+        jcpValueType: string;
+        jcpGrossLabel: string;
+        jcpNetLabel: string;
+        jcpGrossHint: string;
+        jcpNetHint: string;
+        amortNote: string;
+        taxReport: string;
+        backToPortfolio: string;
+    };
+
+    // Tax Report
+    taxReport: {
+        title: string;
+        subtitle: string;
+        year: string;
+        summary: string;
+        totalTaxDue: string;
+        lossCarriedForward: string;
+        totalDividendsIsentos: string;
+        totalJcpGross: string;
+        totalJcpIrrf: string;
+        totalAmortization: string;
+        noTaxDue: string;
+        sec1Title: string;
+        sec1Code: string;
+        sec1Hint: string;
+        sec1PrevYear: string;
+        sec1CurrYear: string;
+        sec1AvgCost: string;
+        sec1TotalCost: string;
+        sec1Qty: string;
+        sec1Empty: string;
+        sec2Title: string;
+        sec2Code: string;
+        sec2Hint: string;
+        sec2Empty: string;
+        sec3Title: string;
+        sec3Code: string;
+        sec3Hint: string;
+        sec3GrossValue: string;
+        sec3IrrfRetained: string;
+        sec3NetReceived: string;
+        sec3Empty: string;
+        sec4Title: string;
+        sec4Hint: string;
+        sec4Month: string;
+        sec4GrossSales: string;
+        sec4CostBasis: string;
+        sec4Result: string;
+        sec4Status: string;
+        sec4LossOffset: string;
+        sec4TaxableResult: string;
+        sec4TaxDue: string;
+        sec4DarfDue: string;
+        sec4Empty: string;
+        exempt: string;
+        taxable: string;
+        loss: string;
+        lossCarryNote: string;
+        exemptNote: string;
+        darfNote: string;
+        printBtn: string;
+        amortSection: string;
+        amortHint: string;
+    };
+
     // Messages
     messages: {
         backupCreated: string;
@@ -378,6 +504,128 @@ export const translations: Record<Language, Translations> = {
             amount: 'Valor',
             categoryCol: 'Categoria',
         },
+        stocks: {
+            title: 'Carteira de Ações',
+            newStock: 'Nova Ação',
+            editStock: 'Editar Ação',
+            ticker: 'Ticker',
+            tickerPlaceholder: 'Ex: PETR4, VALE3, ITUB4',
+            name: 'Nome da Empresa',
+            sector: 'Setor',
+            cnpj: 'CNPJ',
+            cnpjPlaceholder: '00.000.000/0000-00',
+            notes: 'Observações',
+            noStocks: 'Nenhuma ação cadastrada',
+            noStocksHint: 'Clique em "Nova Ação" para começar',
+            confirmDeleteStock: 'Excluir ação e todos os seus eventos?',
+            quantity: 'Quantidade',
+            avgCost: 'Preço Médio',
+            totalInvested: 'Total Investido',
+            totalSales: 'Total Vendas',
+            realizedPL: 'Resultado Realizado',
+            totalDividends: 'Dividendos',
+            totalJcp: 'JCP',
+            totalAmortization: 'Amortização',
+            amortPerShare: 'Valor Amortizado por Ação (R$)',
+            reverseSplitRatio: 'Fator de Grupamento',
+            reverseSplitRatioHint: 'Ex: 10 = cada 10 ações viram 1; 4 = cada 4 viram 1',
+            portfolioSummary: 'Resumo do Portfólio',
+            totalInvestedAll: 'Total Investido',
+            totalReturnAll: 'Resultado Total',
+            totalProventosAll: 'Proventos (Div + JCP)',
+            events: 'Histórico de Eventos',
+            addEvent: 'Adicionar Evento',
+            editEvent: 'Editar Evento',
+            noEvents: 'Nenhum evento registrado',
+            noEventsHint: 'Adicione compras, vendas, dividendos e outros eventos',
+            confirmDeleteEvent: 'Excluir este evento?',
+            eventType: 'Tipo de Evento',
+            eventDate: 'Data',
+            unitPrice: 'Preço por Ação (R$)',
+            fees: 'Corretagem / Taxas (R$)',
+            splitRatio: 'Fator de Desdobramento',
+            splitRatioHint: 'Ex: 2 = 1 ação vira 2; 3 = 1 ação vira 3',
+            totalValue: 'Valor Total Recebido (R$)',
+            bonusShares: 'Ações Bonificadas Recebidas',
+            declaredValue: 'Valor Patrimonial por Ação (R$)',
+            eventTypes: {
+                BUY: 'Compra',
+                SELL: 'Venda',
+                DIVIDEND: 'Dividendo',
+                JCP: 'JCP',
+                SPLIT: 'Desdobramento',
+                REVERSE_SPLIT: 'Grupamento',
+                BONUS: 'Bonificação',
+                SUBSCRIPTION: 'Subscrição',
+                AMORTIZATION: 'Amortização',
+            },
+            shares: 'ações',
+            back: 'Voltar ao portfólio',
+            detail: 'Detalhes',
+            jcpNote: 'Valor bruto (17,5% IRRF retido na fonte)',
+            jcpValueType: 'O valor informado é',
+            jcpGrossLabel: 'Bruto (antes do IRRF)',
+            jcpNetLabel: 'Líquido (já descontado o IRRF)',
+            jcpGrossHint: 'O sistema calcula 17,5% de IRRF sobre este valor.',
+            jcpNetHint: 'O sistema converte para bruto automaticamente (÷ 0,825) para o cálculo do IRRF.',
+            amortNote: 'Reduz o preço médio; devolução de capital não tributada (até PM = 0)',
+            taxReport: 'Relatório IR',
+            backToPortfolio: 'Voltar ao portfólio',
+        },
+        taxReport: {
+            title: 'Relatório de Imposto de Renda',
+            subtitle: 'Resumo anual para declaração no IRPF',
+            year: 'Ano-calendário',
+            summary: 'Resumo do Ano',
+            totalTaxDue: 'IR a Pagar (Renda Variável)',
+            lossCarriedForward: 'Prejuízo a Compensar (anos futuros)',
+            totalDividendsIsentos: 'Dividendos Isentos',
+            totalJcpGross: 'JCP Bruto Recebido',
+            totalJcpIrrf: 'IRRF Retido no JCP (15%)',
+            totalAmortization: 'Amortização Recebida',
+            noTaxDue: 'Nenhum IR devido em Renda Variável neste ano.',
+            sec1Title: 'Seção 1 — Bens e Direitos',
+            sec1Code: 'Grupo 03 • Código 31 — Ações em Bolsa',
+            sec1Hint: 'Declare cada ação com o CNPJ da empresa. O valor declarado é sempre o CUSTO DE AQUISIÇÃO, nunca o valor de mercado.',
+            sec1PrevYear: 'Situação em 31/12 do ano anterior',
+            sec1CurrYear: 'Situação em 31/12 do ano declarado',
+            sec1AvgCost: 'Preço Médio',
+            sec1TotalCost: 'Custo Total (declarar)',
+            sec1Qty: 'Quantidade',
+            sec1Empty: 'Nenhuma ação em carteira em 31/12.',
+            sec2Title: 'Seção 2 — Dividendos',
+            sec2Code: 'Ficha: Rendimentos Isentos e Não Tributáveis • Código 09',
+            sec2Hint: 'Dividendos são isentos para Pessoa Física em 2025. Informe o CNPJ e o nome da empresa pagadora.',
+            sec2Empty: 'Nenhum dividendo recebido no ano.',
+            sec3Title: 'Seção 3 — JCP (Juros sobre Capital Próprio)',
+            sec3Code: 'Ficha: Rendimentos Sujeitos à Tributação Exclusiva/Definitiva • Código 10',
+            sec3Hint: 'O IR de 17,5% já foi retido na fonte pela empresa. Declare o VALOR BRUTO e o IRRF retido.',
+            sec3GrossValue: 'Valor Bruto',
+            sec3IrrfRetained: 'IRRF Retido (17,5%)',
+            sec3NetReceived: 'Líquido Recebido',
+            sec3Empty: 'Nenhum JCP recebido no ano.',
+            sec4Title: 'Seção 4 — Renda Variável (Operações Comuns)',
+            sec4Hint: 'Vendas ≤ R$ 20.000/mês: ISENTAS. Vendas > R$ 20.000/mês: 15% sobre o lucro. Pague via DARF até o último dia útil do mês seguinte.',
+            sec4Month: 'Mês',
+            sec4GrossSales: 'Total de Vendas',
+            sec4CostBasis: 'Custo das Ações Vendidas',
+            sec4Result: 'Resultado',
+            sec4Status: 'Status',
+            sec4LossOffset: 'Compensação de Perda',
+            sec4TaxableResult: 'Base Tributável',
+            sec4TaxDue: 'IR (15%)',
+            sec4DarfDue: 'DARF — Pagar até',
+            sec4Empty: 'Nenhuma venda registrada neste ano.',
+            exempt: 'ISENTO',
+            taxable: 'TRIBUTÁVEL',
+            loss: 'PREJUÍZO',
+            lossCarryNote: 'Prejuízos de meses isentos não são compensáveis (interpretação conservadora).',
+            exemptNote: 'Vendas ≤ R$ 20.000 no mês — lucro isento, declarar apenas como isento no GCAP.',
+            darfNote: 'Pagar DARF até o último dia útil do mês indicado.',
+            printBtn: 'Imprimir',
+            amortSection: 'Seção 5 — Amortização',
+            amortHint: 'Amortização é devolução de capital. Não é tributada, mas reduz o custo médio da ação para fins de cálculo de ganho de capital futuro.',
+        },
         messages: {
             backupCreated: 'Backup criado',
             backupDeleted: 'Backup excluído',
@@ -563,6 +811,128 @@ export const translations: Record<Language, Translations> = {
             descriptionCol: 'Description',
             amount: 'Amount',
             categoryCol: 'Category',
+        },
+        stocks: {
+            title: 'Stock Portfolio',
+            newStock: 'New Stock',
+            editStock: 'Edit Stock',
+            ticker: 'Ticker',
+            tickerPlaceholder: 'E.g.: PETR4, VALE3, ITUB4',
+            name: 'Company Name',
+            sector: 'Sector',
+            cnpj: 'CNPJ',
+            cnpjPlaceholder: '00.000.000/0000-00',
+            notes: 'Notes',
+            noStocks: 'No stocks registered',
+            noStocksHint: 'Click "New Stock" to get started',
+            confirmDeleteStock: 'Delete stock and all its events?',
+            quantity: 'Quantity',
+            avgCost: 'Average Cost',
+            totalInvested: 'Total Invested',
+            totalSales: 'Total Sales',
+            realizedPL: 'Realized P&L',
+            totalDividends: 'Dividends',
+            totalJcp: 'JCP',
+            totalAmortization: 'Amortization',
+            amortPerShare: 'Amortized Value per Share (R$)',
+            reverseSplitRatio: 'Reverse Split Ratio',
+            reverseSplitRatioHint: 'E.g.: 10 = every 10 shares become 1; 4 = every 4 become 1',
+            portfolioSummary: 'Portfolio Summary',
+            totalInvestedAll: 'Total Invested',
+            totalReturnAll: 'Total Return',
+            totalProventosAll: 'Income (Div + JCP)',
+            events: 'Event History',
+            addEvent: 'Add Event',
+            editEvent: 'Edit Event',
+            noEvents: 'No events registered',
+            noEventsHint: 'Add purchases, sales, dividends and other events',
+            confirmDeleteEvent: 'Delete this event?',
+            eventType: 'Event Type',
+            eventDate: 'Date',
+            unitPrice: 'Price per Share (R$)',
+            fees: 'Brokerage / Fees (R$)',
+            splitRatio: 'Split Ratio',
+            splitRatioHint: 'E.g.: 2 = 1 share becomes 2; 3 = 1 share becomes 3',
+            totalValue: 'Total Amount Received (R$)',
+            bonusShares: 'Bonus Shares Received',
+            declaredValue: 'Declared Value per Share (R$)',
+            eventTypes: {
+                BUY: 'Purchase',
+                SELL: 'Sale',
+                DIVIDEND: 'Dividend',
+                JCP: 'JCP',
+                SPLIT: 'Stock Split',
+                REVERSE_SPLIT: 'Reverse Split',
+                BONUS: 'Bonus Shares',
+                SUBSCRIPTION: 'Subscription',
+                AMORTIZATION: 'Amortization',
+            },
+            shares: 'shares',
+            back: 'Back to portfolio',
+            detail: 'Details',
+            jcpNote: 'Gross amount (17.5% IRRF withholding tax at source)',
+            jcpValueType: 'The entered value is',
+            jcpGrossLabel: 'Gross (before IRRF)',
+            jcpNetLabel: 'Net (IRRF already deducted)',
+            jcpGrossHint: 'The system calculates 17.5% IRRF on this value.',
+            jcpNetHint: 'The system converts to gross automatically (÷ 0.825) for IRRF calculation.',
+            amortNote: 'Reduces average cost; return of capital is tax-free (until avg cost = 0)',
+            taxReport: 'Tax Report',
+            backToPortfolio: 'Back to portfolio',
+        },
+        taxReport: {
+            title: 'Income Tax Report',
+            subtitle: 'Annual summary for IRPF declaration',
+            year: 'Calendar year',
+            summary: 'Year Summary',
+            totalTaxDue: 'Tax Due (Variable Income)',
+            lossCarriedForward: 'Loss to Carry Forward (future years)',
+            totalDividendsIsentos: 'Tax-Free Dividends',
+            totalJcpGross: 'Gross JCP Received',
+            totalJcpIrrf: 'IRRF Withheld on JCP (15%)',
+            totalAmortization: 'Amortization Received',
+            noTaxDue: 'No variable income tax due this year.',
+            sec1Title: 'Section 1 — Assets and Rights',
+            sec1Code: 'Group 03 • Code 31 — Stocks',
+            sec1Hint: 'Declare each stock with the company CNPJ. Always use ACQUISITION COST, never market value.',
+            sec1PrevYear: 'Position at 31/12 prior year',
+            sec1CurrYear: 'Position at 31/12 declared year',
+            sec1AvgCost: 'Average Cost',
+            sec1TotalCost: 'Total Cost (to declare)',
+            sec1Qty: 'Quantity',
+            sec1Empty: 'No stocks held on 31/12.',
+            sec2Title: 'Section 2 — Dividends',
+            sec2Code: 'Form: Tax-Free Income • Code 09',
+            sec2Hint: 'Dividends are tax-free for individuals in 2025. Include company CNPJ and name.',
+            sec2Empty: 'No dividends received this year.',
+            sec3Title: 'Section 3 — JCP (Interest on Net Equity)',
+            sec3Code: 'Form: Exclusive/Definitive Taxation • Code 10',
+            sec3Hint: 'The 17.5% tax was already withheld at source. Declare the GROSS AMOUNT and IRRF withheld.',
+            sec3GrossValue: 'Gross Amount',
+            sec3IrrfRetained: 'IRRF Withheld (17.5%)',
+            sec3NetReceived: 'Net Received',
+            sec3Empty: 'No JCP received this year.',
+            sec4Title: 'Section 4 — Variable Income (Common Operations)',
+            sec4Hint: 'Sales ≤ R$ 20,000/month: EXEMPT. Sales > R$ 20,000/month: 15% on gains. Pay via DARF by last business day of following month.',
+            sec4Month: 'Month',
+            sec4GrossSales: 'Total Sales',
+            sec4CostBasis: 'Cost of Shares Sold',
+            sec4Result: 'Result',
+            sec4Status: 'Status',
+            sec4LossOffset: 'Loss Offset',
+            sec4TaxableResult: 'Taxable Result',
+            sec4TaxDue: 'Tax (15%)',
+            sec4DarfDue: 'DARF — Pay by',
+            sec4Empty: 'No sales recorded this year.',
+            exempt: 'EXEMPT',
+            taxable: 'TAXABLE',
+            loss: 'LOSS',
+            lossCarryNote: 'Losses from exempt months cannot be offset (conservative interpretation).',
+            exemptNote: 'Sales ≤ R$ 20,000 — gains exempt, declare as exempt in GCAP.',
+            darfNote: 'Pay DARF by last business day of indicated month.',
+            printBtn: 'Print',
+            amortSection: 'Section 5 — Amortization',
+            amortHint: 'Amortization is return of capital. Not taxed, but reduces average cost for future capital gains calculation.',
         },
         messages: {
             backupCreated: 'Backup created',

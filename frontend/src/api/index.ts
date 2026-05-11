@@ -221,4 +221,62 @@ export const csvImportApi = {
     },
 };
 
+// Stocks
+import type { Stock, StockRequest, StockEvent, StockEventRequest, StockPosition, StockTaxReportResponse } from '../types';
+
+export const stockApi = {
+    getAll: async (): Promise<Stock[]> => {
+        const { data } = await api.get<Stock[]>('/stocks');
+        return data;
+    },
+
+    getPortfolio: async (): Promise<StockPosition[]> => {
+        const { data } = await api.get<StockPosition[]>('/stocks/portfolio');
+        return data;
+    },
+
+    getPosition: async (id: number): Promise<StockPosition> => {
+        const { data } = await api.get<StockPosition>(`/stocks/${id}/position`);
+        return data;
+    },
+
+    create: async (request: StockRequest): Promise<Stock> => {
+        const { data } = await api.post<Stock>('/stocks', request);
+        return data;
+    },
+
+    update: async (id: number, request: StockRequest): Promise<Stock> => {
+        const { data } = await api.put<Stock>(`/stocks/${id}`, request);
+        return data;
+    },
+
+    delete: async (id: number): Promise<void> => {
+        await api.delete(`/stocks/${id}`);
+    },
+
+    getEvents: async (stockId: number): Promise<StockEvent[]> => {
+        const { data } = await api.get<StockEvent[]>(`/stocks/${stockId}/events`);
+        return data;
+    },
+
+    addEvent: async (stockId: number, request: StockEventRequest): Promise<StockEvent> => {
+        const { data } = await api.post<StockEvent>(`/stocks/${stockId}/events`, request);
+        return data;
+    },
+
+    updateEvent: async (stockId: number, eventId: number, request: StockEventRequest): Promise<StockEvent> => {
+        const { data } = await api.put<StockEvent>(`/stocks/${stockId}/events/${eventId}`, request);
+        return data;
+    },
+
+    deleteEvent: async (stockId: number, eventId: number): Promise<void> => {
+        await api.delete(`/stocks/${stockId}/events/${eventId}`);
+    },
+
+    getTaxReport: async (year: number): Promise<StockTaxReportResponse> => {
+        const { data } = await api.get<StockTaxReportResponse>(`/stocks/tax-report/${year}`);
+        return data;
+    },
+};
+
 export default api;

@@ -10,6 +10,7 @@ import { SearchPage } from './pages/SearchPage';
 import { ImportPage } from './pages/ImportPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { StocksPage } from './pages/StocksPage';
 import { LanguageProvider, useLanguage } from './i18n';
 import {
   Wallet,
@@ -24,7 +25,8 @@ import {
   Repeat,
   Brain,
   FileSpreadsheet,
-  Settings
+  Settings,
+  TrendingUp
 } from 'lucide-react';
 import { APP_VERSION } from './version';
 import './index.css';
@@ -39,7 +41,7 @@ const queryClient = new QueryClient({
   },
 });
 
-type Page = 'dashboard' | 'transactions' | 'calendar' | 'search' | 'projection' | 'simulator' | 'recurring' | 'reports' | 'import' | 'settings';
+type Page = 'dashboard' | 'transactions' | 'calendar' | 'search' | 'projection' | 'simulator' | 'recurring' | 'reports' | 'import' | 'settings' | 'stocks';
 
 function ThemeToggle() {
   const [isDark, setIsDark] = useState(() => {
@@ -76,6 +78,7 @@ function AppContent() {
     { page: 'recurring' as const, label: t.nav.recurring, icon: Repeat, hint: 'Lançamentos recorrentes' },
     { page: 'reports' as const, label: t.reports.title, icon: Brain, hint: 'Análises com IA' },
     { page: 'import' as const, label: t.csvImport.title, icon: FileSpreadsheet, hint: 'Importação de CSV' },
+    { page: 'stocks' as const, label: t.stocks.title, icon: TrendingUp, hint: 'Carteira de ações' },
     { page: 'settings' as const, label: t.nav.settings, icon: Settings, hint: 'Preferências do app' },
   ];
 
@@ -127,6 +130,7 @@ function AppContent() {
         {currentPage === 'recurring' && <RecurringPage />}
         {currentPage === 'reports' && <ReportsPage />}
         {currentPage === 'import' && <ImportPage />}
+        {currentPage === 'stocks' && <StocksPage />}
         {currentPage === 'settings' && <SettingsPage />}
       </main>
     </div>

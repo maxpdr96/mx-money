@@ -1,17 +1,9 @@
 package com.mx.money.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mx.money.dto.BackupJsonCategory;
-import com.mx.money.dto.BackupJsonCategorizationRule;
-import com.mx.money.dto.BackupJsonData;
-import com.mx.money.dto.BackupJsonTransaction;
-import com.mx.money.entity.Category;
-import com.mx.money.entity.CategorizationRule;
-import com.mx.money.entity.RecurrenceType;
-import com.mx.money.entity.Transaction;
-import com.mx.money.repository.CategorizationRuleRepository;
-import com.mx.money.repository.CategoryRepository;
-import com.mx.money.repository.TransactionRepository;
+import com.mx.money.dto.*;
+import com.mx.money.entity.*;
+import com.mx.money.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -40,6 +32,8 @@ public class BackupService {
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
     private final CategorizationRuleRepository categorizationRuleRepository;
+    private final StockRepository stockRepository;
+    private final StockEventRepository stockEventRepository;
     private final ObjectMapper objectMapper;
 
     private Path backupDir;
@@ -51,10 +45,14 @@ public class BackupService {
             CategoryRepository categoryRepository,
             TransactionRepository transactionRepository,
             CategorizationRuleRepository categorizationRuleRepository,
+            StockRepository stockRepository,
+            StockEventRepository stockEventRepository,
             ObjectMapper objectMapper) {
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.categorizationRuleRepository = categorizationRuleRepository;
+        this.stockRepository = stockRepository;
+        this.stockEventRepository = stockEventRepository;
         this.objectMapper = objectMapper;
         loadSettings();
         try {
@@ -223,12 +221,42 @@ public class BackupService {
                         .build())
                 .toList();
 
+        List<BackupJsonStock> stocks = stockRepository.findAll().stream()
+                .sorted(Comparator.comparing(Stock::getTicker, String.CASE_INSENSITIVE_ORDER))
+                .map(stock -> {
+                    List<BackupJsonStockEvent> events = stockEventRepository
+                            .findByStockIdOrderByEventDateAscIdAsc(stock.getId()).stream()
+                            .map(e -> BackupJsonStockEvent.builder()
+                                    .type(e.getType())
+                                    .eventDate(e.getEventDate())
+                                    .quantity(e.getQuantity())
+                                    .unitPrice(e.getUnitPrice())
+                                    .fees(e.getFees())
+                                    .splitRatio(e.getSplitRatio())
+                                    .totalValue(e.getTotalValue())
+                                    .notes(e.getNotes())
+                                    .createdAt(e.getCreatedAt())
+                                    .build())
+                            .toList();
+                    return BackupJsonStock.builder()
+                            .ticker(stock.getTicker())
+                            .name(stock.getName())
+                            .sector(stock.getSector())
+                            .cnpj(stock.getCnpj())
+                            .notes(stock.getNotes())
+                            .createdAt(stock.getCreatedAt())
+                            .events(events)
+                            .build();
+                })
+                .toList();
+
         return BackupJsonData.builder()
-                .version(1)
+                .version(2)
                 .exportedAt(LocalDateTime.now())
                 .categories(categories)
                 .transactions(transactions)
                 .categorizationRules(categorizationRules)
+                .stocks(stocks)
                 .build();
     }
 
@@ -270,10 +298,17 @@ public class BackupService {
         List<BackupJsonCategory> categories = Optional.ofNullable(data.getCategories()).orElse(List.of());
         List<BackupJsonTransaction> transactions = Optional.ofNullable(data.getTransactions()).orElse(List.of());
         List<BackupJsonCategorizationRule> categorizationRules = Optional.ofNullable(data.getCategorizationRules()).orElse(List.of());
+        List<BackupJsonStock> stocks = Optional.ofNullable(data.getStocks()).orElse(List.of());
 
         if (createBackupBeforeImport) {
             createBackup();
         }
+
+        // Remove stocks first (cascade: events first, then stocks)
+        for (Stock stock : stockRepository.findAll()) {
+            stockEventRepository.deleteAllByStockId(stock.getId());
+        }
+        stockRepository.deleteAllInBatch();
 
         transactionRepository.deleteAllInBatch();
         categorizationRuleRepository.deleteAllInBatch();
@@ -368,8 +403,42 @@ public class BackupService {
             categorizationRuleRepository.save(rule);
         }
 
-        log.info("JSON import completed with {} categories, {} transactions and {} categorization rules",
-                categoriesByName.size(), transactions.size(), categorizationRules.size());
+        int stockEventCount = 0;
+        for (BackupJsonStock stockJson : stocks) {
+            String ticker = stockJson.getTicker() == null ? "" : stockJson.getTicker().trim().toUpperCase();
+            if (ticker.isBlank()) continue;
+
+            Stock stock = Stock.builder()
+                    .ticker(ticker)
+                    .name(stockJson.getName())
+                    .sector(stockJson.getSector())
+                    .cnpj(stockJson.getCnpj())
+                    .notes(stockJson.getNotes())
+                    .createdAt(stockJson.getCreatedAt())
+                    .build();
+            Stock saved = stockRepository.save(stock);
+
+            List<BackupJsonStockEvent> events = Optional.ofNullable(stockJson.getEvents()).orElse(List.of());
+            for (BackupJsonStockEvent eventJson : events) {
+                if (eventJson.getType() == null || eventJson.getEventDate() == null) continue;
+                StockEvent event = StockEvent.builder()
+                        .stock(saved)
+                        .type(eventJson.getType())
+                        .eventDate(eventJson.getEventDate())
+                        .quantity(eventJson.getQuantity())
+                        .unitPrice(eventJson.getUnitPrice())
+                        .fees(eventJson.getFees())
+                        .splitRatio(eventJson.getSplitRatio())
+                        .totalValue(eventJson.getTotalValue())
+                        .notes(eventJson.getNotes())
+                        .build();
+                stockEventRepository.save(event);
+                stockEventCount++;
+            }
+        }
+
+        log.info("JSON import completed with {} categories, {} transactions, {} categorization rules, {} stocks ({} events)",
+                categoriesByName.size(), transactions.size(), categorizationRules.size(), stocks.size(), stockEventCount);
     }
 
     private Category resolveCategory(Map<String, Category> categoriesByName, String categoryName) {
