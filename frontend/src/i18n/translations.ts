@@ -257,6 +257,29 @@ export interface Translations {
         amortNote: string;
         taxReport: string;
         backToPortfolio: string;
+        manageSectors: string;
+        newSector: string;
+        editSector: string;
+        sectorName: string;
+        sectorColor: string;
+        confirmDeleteSector: string;
+        noSectors: string;
+        sectorSelect: string;
+        sectorCustom: string;
+        chartsTitle: string;
+        chartSectorAlloc: string;
+        chartQtyByTicker: string;
+        eventsTab: string;
+        proventosTab: string;
+        filterAll: string;
+        noProventos: string;
+        proventosMonth: string;
+        proventosDividends: string;
+        proventosJcpGross: string;
+        proventosJcpIrrf: string;
+        proventosJcpNet: string;
+        proventosAmort: string;
+        proventosTotal: string;
     };
 
     // Tax Report
@@ -571,6 +594,29 @@ export const translations: Record<Language, Translations> = {
             amortNote: 'Reduz o preço médio; devolução de capital não tributada (até PM = 0)',
             taxReport: 'Relatório IR',
             backToPortfolio: 'Voltar ao portfólio',
+            eventsTab: 'Histórico de Eventos',
+            proventosTab: 'Proventos por Mês',
+            filterAll: 'Todos',
+            noProventos: 'Nenhum provento registrado',
+            proventosMonth: 'Mês',
+            proventosDividends: 'Dividendos',
+            proventosJcpGross: 'JCP Bruto',
+            proventosJcpIrrf: 'IRRF (17,5%)',
+            proventosJcpNet: 'JCP Líquido',
+            proventosAmort: 'Amortização',
+            proventosTotal: 'Total Recebido',
+            manageSectors: 'Gerenciar Setores',
+            newSector: 'Novo Setor',
+            editSector: 'Editar Setor',
+            sectorName: 'Nome do Setor',
+            sectorColor: 'Cor',
+            confirmDeleteSector: 'Excluir este setor? As ações que usam este setor manterão o nome.',
+            noSectors: 'Nenhum setor cadastrado',
+            sectorSelect: 'Selecionar setor',
+            sectorCustom: 'Digitar manualmente',
+            chartsTitle: 'Gráficos do Portfólio',
+            chartSectorAlloc: 'Alocação por Setor (%)',
+            chartQtyByTicker: 'Quantidade por Ação',
         },
         taxReport: {
             title: 'Relatório de Imposto de Renda',
@@ -879,6 +925,29 @@ export const translations: Record<Language, Translations> = {
             amortNote: 'Reduces average cost; return of capital is tax-free (until avg cost = 0)',
             taxReport: 'Tax Report',
             backToPortfolio: 'Back to portfolio',
+            eventsTab: 'Event History',
+            proventosTab: 'Income by Month',
+            filterAll: 'All',
+            noProventos: 'No income recorded',
+            proventosMonth: 'Month',
+            proventosDividends: 'Dividends',
+            proventosJcpGross: 'JCP Gross',
+            proventosJcpIrrf: 'IRRF (17.5%)',
+            proventosJcpNet: 'JCP Net',
+            proventosAmort: 'Amortization',
+            proventosTotal: 'Total Received',
+            manageSectors: 'Manage Sectors',
+            newSector: 'New Sector',
+            editSector: 'Edit Sector',
+            sectorName: 'Sector Name',
+            sectorColor: 'Color',
+            confirmDeleteSector: 'Delete this sector? Stocks using it will keep the name.',
+            noSectors: 'No sectors registered',
+            sectorSelect: 'Select sector',
+            sectorCustom: 'Type manually',
+            chartsTitle: 'Portfolio Charts',
+            chartSectorAlloc: 'Allocation by Sector (%)',
+            chartQtyByTicker: 'Shares by Ticker',
         },
         taxReport: {
             title: 'Income Tax Report',

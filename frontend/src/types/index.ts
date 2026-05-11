@@ -57,6 +57,17 @@ export interface BalanceProjection {
 
 export type StockEventType = 'BUY' | 'SELL' | 'DIVIDEND' | 'JCP' | 'SPLIT' | 'REVERSE_SPLIT' | 'BONUS' | 'SUBSCRIPTION' | 'AMORTIZATION';
 
+export interface StockSector {
+    id: number;
+    name: string;
+    color: string | null;
+}
+
+export interface StockSectorRequest {
+    name: string;
+    color?: string;
+}
+
 export interface Stock {
     id: number;
     ticker: string;

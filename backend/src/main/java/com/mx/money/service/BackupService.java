@@ -34,6 +34,7 @@ public class BackupService {
     private final CategorizationRuleRepository categorizationRuleRepository;
     private final StockRepository stockRepository;
     private final StockEventRepository stockEventRepository;
+    private final StockSectorRepository stockSectorRepository;
     private final ObjectMapper objectMapper;
 
     private Path backupDir;
@@ -47,12 +48,14 @@ public class BackupService {
             CategorizationRuleRepository categorizationRuleRepository,
             StockRepository stockRepository,
             StockEventRepository stockEventRepository,
+            StockSectorRepository stockSectorRepository,
             ObjectMapper objectMapper) {
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.categorizationRuleRepository = categorizationRuleRepository;
         this.stockRepository = stockRepository;
         this.stockEventRepository = stockEventRepository;
+        this.stockSectorRepository = stockSectorRepository;
         this.objectMapper = objectMapper;
         loadSettings();
         try {
@@ -236,6 +239,7 @@ public class BackupService {
                                     .totalValue(e.getTotalValue())
                                     .notes(e.getNotes())
                                     .createdAt(e.getCreatedAt())
+                                    .updatedAt(e.getUpdatedAt())
                                     .build())
                             .toList();
                     return BackupJsonStock.builder()
@@ -245,18 +249,24 @@ public class BackupService {
                             .cnpj(stock.getCnpj())
                             .notes(stock.getNotes())
                             .createdAt(stock.getCreatedAt())
+                            .updatedAt(stock.getUpdatedAt())
                             .events(events)
                             .build();
                 })
                 .toList();
 
+        List<BackupJsonSector> stockSectors = stockSectorRepository.findAllByOrderByNameAsc().stream()
+                .map(s -> BackupJsonSector.builder().name(s.getName()).color(s.getColor()).build())
+                .toList();
+
         return BackupJsonData.builder()
-                .version(2)
+                .version(3)
                 .exportedAt(LocalDateTime.now())
                 .categories(categories)
                 .transactions(transactions)
                 .categorizationRules(categorizationRules)
                 .stocks(stocks)
+                .stockSectors(stockSectors)
                 .build();
     }
 
@@ -299,16 +309,18 @@ public class BackupService {
         List<BackupJsonTransaction> transactions = Optional.ofNullable(data.getTransactions()).orElse(List.of());
         List<BackupJsonCategorizationRule> categorizationRules = Optional.ofNullable(data.getCategorizationRules()).orElse(List.of());
         List<BackupJsonStock> stocks = Optional.ofNullable(data.getStocks()).orElse(List.of());
+        List<BackupJsonSector> stockSectors = Optional.ofNullable(data.getStockSectors()).orElse(List.of());
 
         if (createBackupBeforeImport) {
             createBackup();
         }
 
-        // Remove stocks first (cascade: events first, then stocks)
+        // Remove stocks first (cascade: events first, then stocks), then sectors
         for (Stock stock : stockRepository.findAll()) {
             stockEventRepository.deleteAllByStockId(stock.getId());
         }
         stockRepository.deleteAllInBatch();
+        stockSectorRepository.deleteAllInBatch();
 
         transactionRepository.deleteAllInBatch();
         categorizationRuleRepository.deleteAllInBatch();
@@ -415,6 +427,7 @@ public class BackupService {
                     .cnpj(stockJson.getCnpj())
                     .notes(stockJson.getNotes())
                     .createdAt(stockJson.getCreatedAt())
+                    .updatedAt(stockJson.getUpdatedAt())
                     .build();
             Stock saved = stockRepository.save(stock);
 
@@ -431,14 +444,28 @@ public class BackupService {
                         .splitRatio(eventJson.getSplitRatio())
                         .totalValue(eventJson.getTotalValue())
                         .notes(eventJson.getNotes())
+                        .createdAt(eventJson.getCreatedAt())
+                        .updatedAt(eventJson.getUpdatedAt())
                         .build();
                 stockEventRepository.save(event);
                 stockEventCount++;
             }
         }
 
-        log.info("JSON import completed with {} categories, {} transactions, {} categorization rules, {} stocks ({} events)",
-                categoriesByName.size(), transactions.size(), categorizationRules.size(), stocks.size(), stockEventCount);
+        int sectorCount = 0;
+        for (BackupJsonSector sectorJson : stockSectors) {
+            String sname = sectorJson.getName() == null ? "" : sectorJson.getName().trim();
+            if (sname.isBlank()) continue;
+            if (stockSectorRepository.findByNameIgnoreCase(sname).isPresent()) continue;
+            stockSectorRepository.save(StockSector.builder()
+                    .name(sname)
+                    .color(sectorJson.getColor())
+                    .build());
+            sectorCount++;
+        }
+
+        log.info("JSON import completed: {} categories, {} transactions, {} rules, {} sectors, {} stocks ({} events)",
+                categoriesByName.size(), transactions.size(), categorizationRules.size(), sectorCount, stocks.size(), stockEventCount);
     }
 
     private Category resolveCategory(Map<String, Category> categoriesByName, String categoryName) {

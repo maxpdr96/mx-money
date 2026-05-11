@@ -24,4 +24,5 @@ public class BackupJsonStockEvent {
     private BigDecimal totalValue;
     private String notes;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

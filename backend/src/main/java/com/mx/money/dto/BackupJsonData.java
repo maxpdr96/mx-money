@@ -19,4 +19,5 @@ public class BackupJsonData {
     private List<BackupJsonTransaction> transactions;
     private List<BackupJsonCategorizationRule> categorizationRules;
     private List<BackupJsonStock> stocks;
+    private List<BackupJsonSector> stockSectors;
 }

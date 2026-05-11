@@ -19,5 +19,6 @@ public class BackupJsonStock {
     private String cnpj;
     private String notes;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private List<BackupJsonStockEvent> events;
 }

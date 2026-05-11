@@ -6,6 +6,8 @@ import type {
     CategoryRequest,
     BalanceResponse,
     BalanceProjection,
+    StockSector,
+    StockSectorRequest,
 } from '../types';
 
 const api = axios.create({
@@ -276,6 +278,24 @@ export const stockApi = {
     getTaxReport: async (year: number): Promise<StockTaxReportResponse> => {
         const { data } = await api.get<StockTaxReportResponse>(`/stocks/tax-report/${year}`);
         return data;
+    },
+};
+
+export const stockSectorApi = {
+    getAll: async (): Promise<StockSector[]> => {
+        const { data } = await api.get<StockSector[]>('/stock-sectors');
+        return data;
+    },
+    create: async (request: StockSectorRequest): Promise<StockSector> => {
+        const { data } = await api.post<StockSector>('/stock-sectors', request);
+        return data;
+    },
+    update: async (id: number, request: StockSectorRequest): Promise<StockSector> => {
+        const { data } = await api.put<StockSector>(`/stock-sectors/${id}`, request);
+        return data;
+    },
+    delete: async (id: number): Promise<void> => {
+        await api.delete(`/stock-sectors/${id}`);
     },
 };
 

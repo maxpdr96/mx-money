@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { transactionApi, categoryApi, balanceApi, stockApi } from '../api';
-import type { TransactionRequest, CategoryRequest, StockRequest, StockEventRequest } from '../types';
+import { transactionApi, categoryApi, balanceApi, stockApi, stockSectorApi } from '../api';
+import type { TransactionRequest, CategoryRequest, StockRequest, StockEventRequest, StockSectorRequest } from '../types';
 
 // Transaction hooks
 export function useTransactions(startDate?: string, endDate?: string) {
@@ -190,6 +190,39 @@ export function useStockTaxReport(year: number) {
     return useQuery({
         queryKey: ['stocks', 'tax-report', year],
         queryFn: () => stockApi.getTaxReport(year),
+    });
+}
+
+// Stock Sector hooks
+export function useStockSectors() {
+    return useQuery({
+        queryKey: ['stock-sectors'],
+        queryFn: () => stockSectorApi.getAll(),
+    });
+}
+
+export function useCreateStockSector() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (request: StockSectorRequest) => stockSectorApi.create(request),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['stock-sectors'] }),
+    });
+}
+
+export function useUpdateStockSector() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, request }: { id: number; request: StockSectorRequest }) =>
+            stockSectorApi.update(id, request),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['stock-sectors'] }),
+    });
+}
+
+export function useDeleteStockSector() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: number) => stockSectorApi.delete(id),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['stock-sectors'] }),
     });
 }
 
